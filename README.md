@@ -3,6 +3,8 @@
 Récuperer la consommation journalière de gaz depuis l'espace client de GRDF et l'envoyer à Home Assistant.
 
 =================
+
+ 
 !!! Travail en cours !!!
 
 =================

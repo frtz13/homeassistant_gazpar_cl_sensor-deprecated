@@ -32,11 +32,15 @@ Créer un dossier *gaspar* dans le dossier *config* de Home Assistant (là, où 
 
 NB: ce dossier est à la fois accessible de l'intérieur du conteneur Home Assistant, et depuis la machine hôte. Il est ainsi possible d'y accéder par "scp" ou par Samba pour y copier des fichiers, si vous avez installé cette extension. 
 
-Dans ce dossier, placer:
+Placez-vous dans ce dossier, puis téléchargez le premier fichier (gaspar.py):
 
-- gaspar.py
+```
+wget https://raw.githubusercontent.com/frtz13/homeassistant_gaspar_cl_sensor/master/gaspar.py
+```
 
-- gaspar_ha.py
+Faites de même avec:
+
+
 
 - gaspar_model.cfg
 
@@ -52,7 +56,7 @@ NB: selon votre contexte de travail, il est possible qu'il soit nécessaire de f
 
 Tout d'abord, il faudra créer un espace client chez GRDF, si cela n'est pas déjà fait, et s'y rendre, afin d'accepter les CGV.
 
-Faire une copie de *gaspar_modele.cfg* et la nommer *gaspar.cfg*. Ensuite éditer ce nouveau fichier (avec nano, ou avec un éditeur dans Home Assistant, cf. ci-dessous):et paramétrer:
+Faire une copie de *gaspar_modele.cfg* et la nommer *gaspar.cfg*. Ensuite éditer ce nouveau fichier (avec nano, ou avec un éditeur dans Home Assistant, cf. ci-dessous) et paramétrer:
 
     GASPAR_USERNAME="votre@adresse.email"
     GASPAR_PASSWORD="password"
@@ -61,7 +65,7 @@ Faire une copie de *gaspar_modele.cfg* et la nommer *gaspar.cfg*. Ensuite édite
 
 ### Définition du *Command Line Sensor* et des *Shell commands*
 
-Si vous n'avez pas encore installé un éditeur pour modifier *configuration.yaml* de Home Asssitant, c'est le moment. A partir du Add-on Store du Superviseur de Home Assistant, installez "File editor" ou "Visual Studio Code".
+Si vous n'avez pas encore installé un éditeur pour modifier le fichier *configuration.yaml* de Home Asssitant, c'est le moment. A partir du Add-on Store du Superviseur de Home Assistant, installez "File editor" ou "Visual Studio Code".
 
 Dans *configuration.yaml*, ajouter:
 
@@ -83,7 +87,7 @@ shell_command:
     grdf_delete_data: '/config/gaspar/gaspar_ha.sh delete'
 ```
 
-NB: si *configuration.yaml* contient déjà une rubrique "sensor:", ne répétez pas l'en-tête de la rubrique, et ajoutez la définition du "sensor" à cette rubrique. Idem pour la partie *shell_command*.
+NB: si *configuration.yaml* contient déjà une rubrique "sensor:", ne créez pas une nouvelle rubrique de ce nom, mais ajoutez la définition du "sensor" à la rubrique existante. Idem pour la partie *shell_command*.
 
 Ensuite, menu Configuration / Contrôle du serveur:  vérifier la configuration (très important de le faire chaque fois!), et si tout es ok, redémarrer Home Assistant.
 
@@ -97,7 +101,7 @@ Si tout va bien, s'y trouvent des nouveaux fichiers: *gaspar.log*, *export_days_
 
 Si aucun nouveau fichier n'est présent: vérifiez qu'il n'y a pas d'erreur au niveau du nom du dossier (écriture en majuscules/minuscules compte!).
 
-Si vous avez obtenu les fichiers *.log mais pas le fichier json: lisez le log (cat gaspar.log); peut-être un problème avec les identifiants pour accéder à l'espace client GRDF, ou que l'accès à l'espace n'a pas permis de récupérer des données de consommation (dans ce cas, on trouve la mention "No results in data" dans le log). Dans ce cas, exécutez le SERVICE une nouvelle fois dans Home Assistant.
+Si vous avez obtenu les fichiers *log* mais pas le fichier *json*: lisez le log (cat gaspar.log); peut-être un problème avec les identifiants pour accéder à l'espace client GRDF, ou que l'accès à l'espace n'a pas permis de récupérer des données de consommation (dans ce cas, on trouve la mention "No results in data" dans le log). Dans ce cas, exécutez le SERVICE une nouvelle fois dans Home Assistant.
 
 Lançons maintenant la mise à jour de notre *sensor*: rendez-vous dans Outils de développement / SERVICES, sélectionnez le service *homeassistant.update_entity* puis l'Entité *sensor.grdf_consommation_gaz*, puis appuyez sur "Call SERVICE". Puis regardez dans Outils de développement / ETATS, si votre Entité *sensor.grdf_consommation_gaz* a bien été mis à jour avec la consommation de la veille. Si elle porte la valeur -1, cela signifie que la consommation de la veille n'est pas encore disponible (vérifiez!). La valeur -2 signifie que le fichier *export_days_values.json* n'a pas été trouvé.
 

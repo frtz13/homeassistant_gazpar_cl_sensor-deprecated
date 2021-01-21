@@ -32,7 +32,7 @@ Créer un dossier *gaspar* dans le dossier *config* de Home Assistant (là, où 
 
 NB: ce dossier est à la fois accessible de l'intérieur du conteneur Home Assistant, et depuis la machine hôte. Il est ainsi possible d'y accéder par "scp" ou par Samba pour y copier des fichiers, si vous avez installé cette extension. 
 
-Placez-vous dans ce dossier, puis téléchargez le premier fichier (gaspar.py):
+Placez-vous dans ce dossier, et commencez à télécharger le premier fichier:
 
 ```
 wget https://raw.githubusercontent.com/frtz13/homeassistant_gaspar_cl_sensor/master/gaspar.py
@@ -40,15 +40,17 @@ wget https://raw.githubusercontent.com/frtz13/homeassistant_gaspar_cl_sensor/mas
 
 Faites de même avec:
 
-
-
-- gaspar_model.cfg
+- gaspar_ha.py
 
 - gaspar_ha.sh
 
+- gaspar_model.cfg
+
 Rendre gaspar_ha.sh exécutable:
 
-    chmod +x gaspar_ha.sh
+```
+chmod +x gaspar_ha.sh
+```
 
 NB: selon votre contexte de travail, il est possible qu'il soit nécessaire de faire précéder certaines commandes par "sudo".
 

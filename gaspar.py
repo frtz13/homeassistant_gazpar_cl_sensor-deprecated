@@ -123,9 +123,9 @@ def login(username, password):
     req = session.post(LOGIN_BASE_URI + API_ENDPOINT_LOGIN, data=payload, allow_redirects=False)
     #print(payload)
     session_cookie = req.cookies.get('GRDF_EP')
-    #print(session_cookie)
-    #print('\n0- monespace req.text\n')
-    #print(req.text)
+    #logging.info(session_cookie)
+    #logging.info('\n0- monespace req.text\n')
+    #logging.info(req.text)
 
     if not 'GRDF_EP' in session.cookies:
         raise LinkyLoginException("Login unsuccessful. Check your credentials.")
@@ -301,17 +301,18 @@ def _get_data(session, resource_id, start_date=None, end_date=None):
 
 
     # Parse to get the data
-    md = re.search("donneesCourante = \"(.*?)\"", req.text)
-    d = md.group(1)
-    #print('\n6- d\n')
-    #print(d)
-    mt = re.search("tooltipDatesInfo = \"(.*?)\"", req.text)
-    t = mt.group(1)
-    #print(mt)
+    try:
+        md = re.search("donneesCourante = \"(.*?)\"", req.text)
+        d = md.group(1)
+        #print('\n6- d\n')
+        #print(d)
+        mt = re.search("tooltipDatesInfo = \"(.*?)\"", req.text)
+        t = mt.group(1)
+        #print(mt)
+    except:
+        raise Exception("No results in data")
 
     # Make json
-    now = datetime.datetime.now()
-
     ts=t.split(",")
     ds=d.split(",")
     size=len(ts)
@@ -325,9 +326,6 @@ def _get_data(session, resource_id, start_date=None, end_date=None):
             data.append({'conso':ds[i], 'time':ts[i].replace('Le ','')})
             
         i +=1
-    json_data = json.dumps(data)
-
- 
 
     #if 300 <= req.status_code < 400:
     #   # So... apparently, we may need to do that once again if we hit a 302
@@ -341,8 +339,7 @@ def _get_data(session, resource_id, start_date=None, end_date=None):
     try:
         res = data
     except:
-        logging.info("Unable to get data")
-        sys.exit(os.EX_SOFTWARE)
+        raise Exception("Unable to get data")
 
     #if res['etat'] and res['etat']['valeur'] == 'erreur' and res['etat']['erreurText']:
     #    raise GazparServiceException(html.unescape(res['etat']['erreurText']))

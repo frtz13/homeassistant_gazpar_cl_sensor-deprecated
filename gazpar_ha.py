@@ -23,15 +23,15 @@ import datetime
 import logging
 import sys
 import json
-import gaspar
+import gazpar
 from dateutil.relativedelta import relativedelta
 from lxml import etree
 import xml.etree.ElementTree as ElementTree
 
-USERNAME = os.environ['GASPAR_USERNAME']
-PASSWORD = os.environ['GASPAR_PASSWORD']
+USERNAME = os.environ['GAZPAR_USERNAME']
+PASSWORD = os.environ['GAZPAR_PASSWORD']
 BASEDIR = os.environ['BASE_DIR']
-LOGFILE = os.getenv('LOG_FILE', "gaspar.log")
+LOGFILE = os.getenv('LOG_FILE', "gazpar_ha.log")
 
 DAILY = "export_days_values"
 DAILY_json = os.path.join(BASEDIR, DAILY + ".json")
@@ -69,26 +69,27 @@ def export_daily_values(res):
         #open was with w+. don't understand.
         json.dump(res, outfile)
 
-# get data from GRDF
-# write daily result to json file
-# write connection log to file
-def fetch_data():
-    try:
-        if os.path.exists(DAILY_json_log):
-            os.remove(DAILY_json_log)
-    except Exception as e:
-        logging.ERROR("error when deleting old log file: " + str(e))
-
-    #set up logging to extra file
+#set up logging to extra file
+def add_daily_log():
     logToFile = logging.FileHandler(DAILY_json_log)
     logToFile.level = logging.INFO
     formatter = logging.Formatter('%(asctime)s %(message)s',"%Y-%m-%d %H:%M:%S")
     logToFile.setFormatter(formatter)
     logging.getLogger('').addHandler(logToFile)
 
+# get data from GRDF
+# write daily result to json file
+# write connection log also to extra log file
+def fetch_data():
+    try:
+        if os.path.exists(DAILY_json_log):
+            os.remove(DAILY_json_log)
+    except Exception as e:
+        logging.ERROR("error when deleting old log file: " + str(e))
+    add_daily_log()
     try:
         logging.info("logging in as %s...", USERNAME)
-        token = gaspar.login(USERNAME, PASSWORD)
+        token = gazpar.login(USERNAME, PASSWORD)
         logging.info("logged in successfully!")
 
         logging.info("retrieving data...")
@@ -96,7 +97,7 @@ def fetch_data():
 
         # on demande la consommation d'il y a 2 jours et la veille
         # mais le résultat semble toujours inclure plus de données
-        res_day = gaspar.get_data_per_day(token, dtostr(today - relativedelta(days=1)), \
+        res_day = gazpar.get_data_per_day(token, dtostr(today - relativedelta(days=1)), \
                                          dtostr(today - relativedelta(days=2)))
         logging.info("got data!")
         try:
@@ -108,7 +109,7 @@ def fetch_data():
             logging.error(exc)
             return False
  
-    except gaspar.LinkyLoginException as exc:
+    except gazpar.LinkyLoginException as exc:
         logging.error(exc)
         print("Error occurred: " + str(exc))
         return False
@@ -159,6 +160,8 @@ def delete_json():
             os.remove(DAILY_json_log)
     except Exception as e:
         logging.ERROR("error when deleting result log file: " + str(e))
+    add_daily_log()
+    logging.info("set 'conso' to unknown")
     print("done.")
 
 # Main script 

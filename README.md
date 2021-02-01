@@ -142,11 +142,13 @@ Une chose est encore à faire: peu avant minuit, la valeur du *sensor* doit êtr
 
 - Nom: *GRDF reset*, Mode: Unique
 
-- Déclencheur: type *Heure*, à: 23:58
+- Déclencheur: type *Heure*, à: 23:57
 
 - Actions:
   
   - type *Appeler un service*, *shell_command.grdf_delete_data*
+  
+  - type: Délai, valeur: 00:01:00
   
   - type *Appeler un service*, service: *homeassistant.update_entity:* *sensor.grdf_consommation_gaz*.
 
@@ -171,10 +173,13 @@ hours_to_show: 240
 aggregate_func: max
 group_by: date
 icon: 'mdi:fire'
-labels: true
 hour24: true
 show:
   graph: bar
+  labels: true
+state_map:
+  - value: '-1'
+    label: .
 ```
 
 Ne cherchez pas le configurateur graphique pour ce graphique... actuellement, il n'y en a pas.

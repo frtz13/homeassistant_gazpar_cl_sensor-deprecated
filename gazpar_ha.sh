@@ -13,7 +13,16 @@ run_script () {
   python3 "${PY_SCRIPT}" $1 -o "${BASE_DIR}" 2>&1
 }
 
-# check configuration file
+# check requirements and configuration file
+if [ $# -eq 1 ]
+then
+  if [ $1="delete" ]
+  # only call for this command line parameter to avoid calling pip install too often
+  then
+    pip install -r "$BASE_DIR"/requirements.txt 1>"$BASE_DIR"/pip.log 2>"$BASE_DIR"/piperror.log
+  fi
+fi
+
 if [ -f "${BASE_DIR}"/"${CFG_FILE}" ]
 then
   . "${BASE_DIR}"/"${CFG_FILE}"

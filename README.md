@@ -44,6 +44,8 @@ Faites de même avec:
 
 - gazpar_ha.sh
 
+- requirements.txt
+
 - gazpar_model.cfg
 
 Rendre gazpar_ha.sh exécutable:
@@ -95,9 +97,9 @@ Ensuite, menu Configuration / Contrôle du serveur:  vérifier la configuration 
 
 ### Essais
 
-Dans Home Assistant, rendez-vous dans Outils de développement / SERVICES, sélectionner le service *shell_command.grdf_get_data* puis appuyez sur "Call SERVICE".
+Dans Home Assistant, rendez-vous dans Outils de développement / SERVICES, sélectionner le service *shell_command.grdf_delete_data* puis appuyez sur "Call SERVICE". Cela installera d'éventuels bibliothèques manquantes.
 
-Retournez à la ligne de commande et examinez le contenu de votre dossier *gazpar*.
+Ensuite, faites de même avec le service *shell_command.grdf_get_data*.Retournez à la ligne de commande et examinez le contenu de votre dossier *gazpar*.
 
 Si tout va bien, s'y trouvent des nouveaux fichiers: *gaspar_ha.log*, *export_days_values.json* et *export_days_values.log*. Vous pouvez consulter votre consommation des jours passés par la commande *cat export_days_values.json*.
 

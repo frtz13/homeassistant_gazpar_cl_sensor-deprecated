@@ -46,7 +46,7 @@ Faites de même avec:
 
 - requirements.txt
 
-- gazpar_model.cfg
+- gazpar_modele.cfg
 
 Rendre gazpar_ha.sh exécutable:
 

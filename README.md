@@ -10,8 +10,6 @@ L'objectif est de récupérer la consommation journalière de gaz et de le repr�
 
 L'intégration dans Home Assistant nécessitera un peu de patience et nous fera visiter quelques aspects de ce système.
 
-Techniquement parlé, elle fonctionne sans installation de modules supplémentaires, notamment à l'intérieur du conteneur Docker de Home Assistant.
-
 La consommation est représentée sous forme d'un *Command line sensor* dont la mise à jour est provoquée par une *Automatisation*. Ainsi nous maîtrisons le moment de connexion à l'espace client GRDF, et nous évitons de l'interroger inutilement à propos de la consommation de la veille, sachant qu'elle n'est disponible qu'à partir de l'après-midi, ou même encore plus tard. En tout cas, il en est ainsi pour la mienne.
 
 La récupération de la consommation se déroule de la manière suivante:
@@ -28,7 +26,7 @@ Nous contournons une difficulté: l'interrogation de l'espace client GRDF dure s
 
 ## Installation
 
-Créer un dossier *gazpar* dans le dossier *config* de Home Assistant (là, où se trouve le fichier de configuration *configuration.yaml*).
+Créer un dossier *gazpar* dans le dossier *config* de Home Assistant (là, où se trouve le fichier *configuration.yaml*).
 
 NB: ce dossier est à la fois accessible de l'intérieur du conteneur Home Assistant, et depuis la machine hôte. Il est ainsi possible d'y accéder par *scp* ou par *Samba* pour y copier des fichiers, si vous avez installé cette extension. 
 
@@ -111,7 +109,7 @@ Lançons maintenant la mise à jour de notre *sensor*: rendez-vous dans Outils d
 
 ### Automatisation de la lecture de la consommation de la veille
 
-Pour rendre la connexion à l'espace client automatique, nous ajoutons une *Automatisation* dans Home Assistant (Configuration / Automatisations, Commencer par une Automatisation vide):
+Pour rendre la connexion à l'espace client automatique, nous ajoutons une *Automatisation* dans Home Assistant (Configuration / Automatisations, commencer par une Automatisation vide):
 
 - Nom: *GRDF get data*, Mode: Unique
 
@@ -182,7 +180,7 @@ state_map:
     label: .
 ```
 
-Ne cherchez pas le configurateur graphique pour ce graphique... actuellement, il n'y en a pas.
+Ne cherchez pas le configurateur graphique pour ce graphique... actuellement, il n'y en a pas. Aussi, la barre la plus à gauche semble toujours avoir la valeur -1, probablement à cause d'un dysfonctionnement de la mini-graph-card dans la version utilisée.
 
 --
 

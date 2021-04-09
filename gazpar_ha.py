@@ -1,8 +1,9 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 # Adapted to gaspar (C) 2018 epierre
-"""Generates energy consumption JSON files from GrDf consumption data
-collected via their  website (API).
+# homeassistant_gazpar_cl_sensor
+# v. 9/4/2021
+"""Generates energy consumption data from GrDf consumption data collected via their  website (API).
 """
 
 # This program is free software: you can redistribute it and/or modify
@@ -36,6 +37,8 @@ LOGFILE = os.getenv('LOG_FILE', "gazpar_ha.log")
 DAILY = "export_days_values"
 DAILY_json = os.path.join(BASEDIR, DAILY + ".json")
 DAILY_json_log = os.path.join(BASEDIR, DAILY + ".log")
+MONTHLY = "export_months_values"
+MONTHLY_json = os.path.join(BASEDIR, MONTHLY + ".json")
 
 # command line commands
 CMD_Fetch = "fetch"
@@ -69,6 +72,24 @@ def export_daily_values(res):
         #open was with w+. don't understand.
         json.dump(res, outfile)
 
+def get_monthly_conso(res, monthsBefore):
+    strMonth = (datetime.date.today() - relativedelta(months=monthsBefore)).strftime("%m/%Y")
+    for datapoint in res:
+        if datapoint['time'] == strMonth:
+            conso = datapoint['conso']
+        # Remove any invalid values
+        # (they're error codes on the API side, but useless here)
+            if int(conso) < 0:
+                conso = "0"
+            return conso
+    return "-1"    
+
+# Export the JSON file for monthly consumption
+def export_monthly_values(res):
+    with open(MONTHLY_json, 'w') as outfile:
+        #open was with w+. don't understand.
+        json.dump(res, outfile)
+
 #set up logging to extra file
 def add_daily_log():
     logToFile = logging.FileHandler(DAILY_json_log)
@@ -99,13 +120,17 @@ def fetch_data():
         # mais le résultat semble toujours inclure plus de données
         res_day = gazpar.get_data_per_day(token, dtostr(today - relativedelta(days=1)), \
                                          dtostr(today - relativedelta(days=2)))
+        # 12 months ago - today
+        res_month = gazpar.get_data_per_month(token, dtostr(today - relativedelta(months=2)), dtostr(today))
         logging.info("got data!")
+
         try:
             export_daily_values(res_day)
+            export_monthly_values(res_month)
             print("done.")
             return True
         except Exception as exc:
-            logging.info("daily values non exported")
+            logging.info("daily/monthly values non exported")
             logging.error(exc)
             return False
  
@@ -131,6 +156,15 @@ def sensor():
         else:
             conso = "-2"
 
+        if os.path.exists(MONTHLY_json):
+            with open(MONTHLY_json, 'r') as infile:
+                res_month = json.load(infile)
+                conso_m = get_monthly_conso(res_month,0)
+                conso_mm1 = get_monthly_conso(res_month,1)
+        else:
+            conso_m = "-2"
+            conso_mm1 = "-2"
+
         try:
             if os.path.exists(DAILY_json_log):
                 with open(DAILY_json_log,"r") as lastlogfile:
@@ -140,7 +174,7 @@ def sensor():
     except Exception as e:
         conso = "-3"
         logging.error("Error reading result json file: " + str(e))
-    dictRet = {"conso": str(conso), "log":lastlog.rstrip()};
+    dictRet = {"conso": str(conso), "conso_curr_month": str(conso_m), "conso_prev_month": str(conso_mm1), "log":lastlog.rstrip()};
     print(json.dumps(dictRet))
 
 # delete json result file and last log file

@@ -1,2 +1,7 @@
 v20210120 - fk
 	version initiale
+
+v20210409 - fk
+    ajout de la consommation du mois en cours et du mois précédent dans les attributs du Sensor
+	ajout des Sensors pour la consommation du mois courant et du mois précédent
+	utilisation de la ApexCharts Card

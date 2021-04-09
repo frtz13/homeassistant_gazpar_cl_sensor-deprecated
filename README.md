@@ -14,13 +14,13 @@ La consommation est représentée sous forme d'un *Command line sensor* dont la 
 
 La récupération de la consommation se déroule de la manière suivante:
 
-- Dans l'après-midi, la commande *gazpar_ha.sh fetch* effectuera une connexion à l'espace client GRDF et enregistre les consommations journalières des jours passés dans le fichier *export_days_values.json*.
+- Dans l'après-midi, la commande *gazpar_ha.sh fetch* effectuera une connexion à l'espace client GRDF et enregistre les consommations journalières des jours passés dans le fichier *export_days_values.json*, ansi que les consommations mensuelles dans le fichier *export_months_values.json*.
 
-- Ensuite la commande *gazpar_ha.sh sensor* va extraire la consommation de la veille de ce fichier. C'est cette commande qui alimente le *Command line sensor* et qui lui fournit la consommation de la veille.
+- Ensuite, la commande *gazpar_ha.sh sensor* va extraire la consommation de la veille, du mois courant et du mois précédent de ces fichiers. C'est cette commande qui alimente le *Command line sensor* et qui lui fournit la consommation de la veille (entre autres).
 
-- Un peu avant minuit, une *Automatisation* remet le *Sensor* à zéro, et nous effaçons le fichier des consommations enregistrés.
+- Un peu avant minuit, une *Automatisation* remet le *Sensor* à la valeur "inconnu" (-1), et nous effaçons le fichier des consommations journalières enregistrés.
 
-Ainsi, chaque jour, notre *Sensor* aura la valeur zéro jusqu'à la récupération de la consommation de veille, valeur qui conservera jusqu'à peu avant minuit.
+Ainsi, chaque jour, notre *Sensor* aura cette valeur jusqu'à la récupération de la consommation de veille, valeur qui conservera jusqu'à peu avant minuit.
 
 Nous contournons une difficulté: l'interrogation de l'espace client GRDF dure souvent plus longtemps que 10 secondes. Or, Home Assistant abandonne l'attente au bout de 10 secondes, et rate ainsi le résultat. 
 
@@ -54,6 +54,16 @@ chmod +x gazpar_ha.sh
 
 NB: selon votre contexte de travail, il est possible qu'il soit nécessaire de faire précéder certaines commandes par "sudo".
 
+## Mise à jour
+
+Si vous utilisez déjà la version précédente du gazpar_cl_sensor:
+
+- Remplacez gazpar_ha.py par la nouvelle version.
+
+- Modiez la configuration du Sensor dans Home Assistant, afin d'obtenir les nouveaux Sensors de consommation mensuelle.
+
+- (Recommandé) Installez Apex Graph card.
+
 ## Paramétrer l'accès à l'espace client GRDF
 
 Tout d'abord, il faudra créer un espace client chez GRDF, si cela n'est pas déjà fait, et s'y rendre, afin d'accepter les CGV.
@@ -79,8 +89,20 @@ sensor:
     scan_interval: 100000000
     unit_of_measurement: "kWh"
     json_attributes:
-    - log
+      - conso_curr_month
+      - conso_prev_month
+      - log
     value_template: '{{ value_json.conso | round(0) }}'
+  - platform: template
+    sensors:
+      grdf_conso_curr_month:
+        friendly_name: "Consommation gaz mois courant"
+        unit_of_measurement: "kWh"
+        value_template: "{{ state_attr('sensor.grdf_consommation_gaz', 'conso_curr_month') }}"
+      grdf_conso_prev_month:
+        friendly_name: "Consommation gaz mois précédent"
+        unit_of_measurement: "kWh"
+        value_template: "{{ state_attr('sensor.grdf_consommation_gaz', 'conso_prev_month') }}"
 ```
 
 ```
@@ -152,35 +174,42 @@ Une chose est encore à faire: peu avant minuit, la valeur du *sensor* doit êtr
 
 ### Le graphique
 
-Pour la présentation, nous utiliserons la "Mini graph card" ([GitHub - kalkih/mini-graph-card: Minimalistic graph card for Home Assistant Lovelace UI](https://github.com/kalkih/mini-graph-card)).
+Pour la présentation, nous utiliserons la "Apex graph card"
+
+Pour la présentation, nous utiliserons la "Apex graph card" ([[GitHub - RomRider/apexcharts-card:  A Lovelace card to display advanced graphs and charts based on ApexChartsJS for Home Assistant](https://github.com/RomRider/apexcharts-card)]).
 
 Son installation se résume grosso-modo à:
 
-- télécharger *mini-graph-card-bundle.js* et le placer dans le dossier /config/www
+- télécharger *apexcharts-card.js* et le placer dans le dossier /config/www
 
-- dans Home Assistant, se rendre dans Configuration / Tableaux de bord Lovelace, onglet Ressources. Click sur "+" puis saisir la URL "/local/mini-graph-card-bundle.js" et préciser le type *Javascript module*.
+- dans Home Assistant, se rendre dans Configuration / Tableaux de bord Lovelace, onglet Ressources. Click sur "+" puis saisir la URL "/local/apexcharts-card.js" et préciser le type *Javascript module*.
 
-Enfin, dans votre tableau de bord, ajoutez y une carte de type *Personnalisé: Mini Graph card*, Dans la configuration de la carte, copiez/collez te texte suivant:
+Enfin, dans votre tableau de bord, ajoutez y une carte de type *Personnalisé: ApexCharts Card*, Dans la configuration de la carte, copiez/collez te texte suivant:
 
 ```
-type: 'custom:mini-graph-card'
-name: Consommation gaz (par jour)
-entities:
-  - sensor.grdf_consommation_gaz
-hours_to_show: 240
-aggregate_func: max
-group_by: date
-icon: 'mdi:fire'
-hour24: true
-show:
-  graph: bar
-  labels: true
-state_map:
-  - value: '-1'
-    label: .
+type: 'custom:apexcharts-card'
+graph_span: 10d1s
+span:
+  end: day
+header:
+  show: true
+  title: Consommation gaz (de la veille)
+  show_states: false
+  standard_format: true
+series:
+  - entity: sensor.grdf_consommation_gaz
+    type: column
+    show:
+      name_in_header: false
+    group_by:
+      func: max
+      duration: 1d
+apex_config:
+  yaxis:
+    min: 0
 ```
 
-Ne cherchez pas le configurateur graphique pour ce graphique... actuellement, il n'y en a pas. Aussi, la barre la plus à gauche semble toujours avoir la valeur -1, probablement à cause d'un dysfonctionnement de la mini-graph-card dans la version utilisée.
+Ne cherchez pas le configurateur graphique pour ce graphique... actuellement, il n'y en a pas.
 
 --
 

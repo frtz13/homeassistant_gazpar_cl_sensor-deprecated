@@ -17,7 +17,7 @@ run_script () {
 if [ $# -eq 1 ]
 then
   # only call for this command line parameter to avoid calling pip install too often
-  if [ $1 == "delete" ]
+  if [ $1 = "delete" ]
   then
     pip install -r "$BASE_DIR"/requirements.txt 1>"$BASE_DIR"/pip.log 2>"$BASE_DIR"/piperror.log
   fi

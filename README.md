@@ -18,9 +18,9 @@ La récupération de la consommation se déroule de la manière suivante:
 
 - Ensuite, la commande *gazpar_ha.sh sensor* va extraire la consommation de la veille, du mois courant et du mois précédent de ces fichiers. C'est cette commande qui alimente le *Command line sensor* et qui lui fournit la consommation de la veille (entre autres).
 
-- Un peu avant minuit, une *Automatisation* remet le *Sensor* à la valeur "inconnu" (-1), et nous effaçons le fichier des consommations journalières enregistrés.
+- Un peu avant minuit, nous effaçons le fichier des consommations journalières, puis lançons une *Automatisation* remet le *Sensor* à la valeur "inconnu" (-1).
 
-Ainsi, chaque jour, notre *Sensor* aura cette valeur jusqu'à la récupération de la consommation de veille, valeur qui conservera jusqu'à peu avant minuit.
+Ainsi, chaque jour, notre *Sensor* aura cette valeur jusqu'à la récupération de la consommation de veille, qu'il conservera jusqu'à peu avant minuit.
 
 Nous contournons une difficulté: l'interrogation de l'espace client GRDF dure souvent plus longtemps que 10 secondes. Or, Home Assistant abandonne l'attente au bout de 10 secondes, et rate ainsi le résultat. 
 
@@ -56,11 +56,11 @@ NB: selon votre contexte de travail, il est possible qu'il soit nécessaire de f
 
 ## Mise à jour
 
-Si vous utilisez déjà la version précédente du gazpar_cl_sensor:
+Si vous utilisez déjà une version précédente du gazpar_cl_sensor:
 
 - Remplacez gazpar_ha.py par la nouvelle version.
 
-- Modiez la configuration du Sensor dans Home Assistant, afin d'obtenir les nouveaux Sensors de consommation mensuelle.
+- Le cas échéant, modiez la configuration du Sensor dans Home Assistant, afin d'obtenir les nouveaux Sensors de consommation mensuelle.
 
 - (Recommandé) Installez Apex Graph card.
 
@@ -121,11 +121,11 @@ Dans Home Assistant, rendez-vous dans Outils de développement / SERVICES, séle
 
 Ensuite, faites de même avec le service *shell_command.grdf_get_data*.Retournez à la ligne de commande et examinez le contenu de votre dossier *gazpar*.
 
-Si tout va bien, s'y trouvent des nouveaux fichiers: *gaspar_ha.log*, *export_days_values.json* et *export_days_values.log*. Vous pouvez consulter votre consommation des jours passés par la commande *cat export_days_values.json*.
+Si tout va bien, s'y trouvent des nouveaux fichiers: *export_days_values.json* et *export_days_values.log*, *export_months_values.log*. Vous pouvez consulter votre consommation des jours passés par la commande *cat export_days_values.json*.
 
 Si aucun nouveau fichier n'est présent: vérifiez qu'il n'y a pas d'erreur au niveau du nom du dossier (écriture en majuscules/minuscules compte!).
 
-Si vous avez obtenu les fichiers *log* mais pas le fichier *json*: lisez le log (cat gaspar.log); peut-être un problème avec les identifiants pour accéder à l'espace client GRDF, ou que l'accès à l'espace n'a pas permis de récupérer des données de consommation (dans ce cas, on trouve la mention "No results in data" dans le log). Dans ce cas, exécutez le SERVICE une nouvelle fois dans Home Assistant.
+Si vous avez obtenu les fichiers *log* mais pas le fichier *json*: lisez le log; peut-être un problème avec les identifiants pour accéder à l'espace client GRDF, ou que l'accès à l'espace n'a pas permis de récupérer des données de consommation (dans ce cas, on trouve la mention "No results in data" dans le log). Dans ce cas, exécutez le SERVICE une nouvelle fois dans Home Assistant.
 
 Lançons maintenant la mise à jour de notre *sensor*: rendez-vous dans Outils de développement / SERVICES, sélectionnez le service *homeassistant.update_entity* puis l'Entité *sensor.grdf_consommation_gaz*, puis appuyez sur "Call SERVICE". Puis regardez dans Outils de développement / ETATS, si votre Entité *sensor.grdf_consommation_gaz* a bien été mis à jour avec la consommation de la veille. Si elle porte la valeur -1, cela signifie que la consommation de la veille n'est pas encore disponible (vérifiez!). La valeur -2 signifie que le fichier *export_days_values.json* n'a pas été trouvé.
 
@@ -193,12 +193,13 @@ span:
   end: day
 header:
   show: true
-  title: Consommation gaz (de la veille)
+  title: Consommation gaz
   show_states: false
   standard_format: true
 series:
   - entity: sensor.grdf_consommation_gaz
     type: column
+    offset: +1day
     show:
       name_in_header: false
     group_by:

@@ -4,7 +4,6 @@ SCRIPT=$(readlink -f "$0")
 BASE_DIR=$(dirname "${SCRIPT}")
 export BASE_DIR
 CFG_FILE="gazpar.cfg"
-LOG_FILE="gazpar_ha.log"
 export PYTHONWARNINGS="ignore"
 
 run_script () {

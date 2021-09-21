@@ -5,3 +5,11 @@ v20210409 - fk
     ajout de la consommation du mois en cours et du mois précédent dans les attributs du Sensor
 	ajout des Sensors pour la consommation du mois courant et du mois précédent
 	utilisation de la ApexCharts Card
+
+v20210921 - fk
+	fixed equality operator in gazpar_ha.sh
+	requirements file modified
+	dont overwrite monthly values with empty result
+	abandon de gazpar_ha.log
+	un peu de refactoring
+	log de la veille sauvegardé dans le fichier previous.log

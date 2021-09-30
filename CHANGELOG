@@ -13,3 +13,7 @@ v20210921 - fk
 	abandon de gazpar_ha.log
 	un peu de refactoring
 	log de la veille sauvegardé dans le fichier previous.log
+
+30/9/2021 - fk
+    Readme: ajout déclarations des Sensors en m3
+	Readme: modification de la condition de l'automatisation GRDF Get Data

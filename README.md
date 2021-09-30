@@ -115,6 +115,32 @@ NB: si *configuration.yaml* contient déjà une rubrique "sensor:", ne créez pa
 
 Ensuite, menu Configuration / Contrôle du serveur:  vérifier la configuration (très important de le faire chaque fois!), et si tout es ok, redémarrer Home Assistant.
 
+Si vous préférez les m<sup>3</sup> comme unité de mesure, vous pouvez définir les *Sensors* ainsi (avec le coefficient de conversion de 10.93 sur ma dernière facture de gaz):
+
+```
+sensor:
+  - platform: command_line
+    name: GRDF consommation gaz
+    command: "/config/gazpar/gazpar_ha.sh sensor"
+    scan_interval: 100000000
+    unit_of_measurement: "m3"
+    json_attributes:
+      - conso_curr_month
+      - conso_prev_month
+      - log
+    value_template: '{{ value_json.conso | multiply(1/10.93) | round(2) }}'
+  - platform: template
+    sensors:
+      grdf_conso_curr_month:
+        friendly_name: "Consommation gaz mois courant"
+        unit_of_measurement: "m3"
+        value_template: "{{ state_attr('sensor.grdf_consommation_gaz', 'conso_curr_month') | multiply(1/10.93) | round(2) }}"
+      grdf_conso_prev_month:
+        friendly_name: "Consommation gaz mois précédent"
+        unit_of_measurement: "m3"
+        value_template: "{{ state_attr('sensor.grdf_consommation_gaz', 'conso_prev_month')  | multiply(1/10.93) | round(2) }}"
+```
+
 ### Essais
 
 Dans Home Assistant, rendez-vous dans Outils de développement / SERVICES, sélectionner le service *shell_command.grdf_delete_data* puis appuyez sur "Call SERVICE". Cela installera d'éventuels bibliothèques manquantes.
@@ -125,7 +151,7 @@ Si tout va bien, s'y trouvent des nouveaux fichiers: *export_days_values.json* e
 
 Si aucun nouveau fichier n'est présent: vérifiez qu'il n'y a pas d'erreur au niveau du nom du dossier (écriture en majuscules/minuscules compte!).
 
-Si vous avez obtenu les fichiers *log* mais pas le fichier *json*: lisez le log; peut-être un problème avec les identifiants pour accéder à l'espace client GRDF, ou que l'accès à l'espace n'a pas permis de récupérer des données de consommation (dans ce cas, on trouve la mention "No results in data" dans le log). Dans ce cas, exécutez le SERVICE une nouvelle fois dans Home Assistant.
+Si vous avez obtenu le fichiers *log* mais pas le fichier *json*: lisez le log; peut-être un problème avec les identifiants pour accéder à l'espace client GRDF, ou que l'accès à l'espace n'a pas permis de récupérer des données de consommation (dans ce cas, on trouve la mention "No results in data" dans le log). Dans ce cas, exécutez le SERVICE une nouvelle fois dans Home Assistant.
 
 Lançons maintenant la mise à jour de notre *sensor*: rendez-vous dans Outils de développement / SERVICES, sélectionnez le service *homeassistant.update_entity* puis l'Entité *sensor.grdf_consommation_gaz*, puis appuyez sur "Call SERVICE". Puis regardez dans Outils de développement / ETATS, si votre Entité *sensor.grdf_consommation_gaz* a bien été mis à jour avec la consommation de la veille. Si elle porte la valeur -1, cela signifie que la consommation de la veille n'est pas encore disponible (vérifiez!). La valeur -2 signifie que le fichier *export_days_values.json* n'a pas été trouvé.
 
@@ -138,7 +164,7 @@ Pour rendre la connexion à l'espace client automatique, nous ajoutons une *Auto
 - Déclencheur: type: Modèle de temps, Heures: 18, Minutes: /10, Secondes: 0
   ce qui signifie: entre 18 et 19 heures, déclencher cette *Automatisation* toutes les 10 minutes.
 
-- Conditions: type: Valeur numérique, Entité: sensor.grdf_consommation_gaz, en dessous de: -0.1
+- Conditions: type: Valeur numérique, Entité: sensor.grdf_consommation_gaz, en dessous de: -0.01
 
 - Actions:
   

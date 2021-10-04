@@ -146,7 +146,7 @@ dmypy.json
 
 # Cython debug symbols
 cython_debug/
-/export_days_values.json
-/export_days_values - Copy.json
-/export_months_values.json
-/export_months_values - Copy.json
+
+# special
+/export*.*
+/conso*.*

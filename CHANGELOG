@@ -1,12 +1,12 @@
-v20210120 - fk
+v20210120 - frtz13
 	version initiale
 
-v20210409 - fk
+v20210409 - frtz13
     ajout de la consommation du mois en cours et du mois précédent dans les attributs du Sensor
 	ajout des Sensors pour la consommation du mois courant et du mois précédent
 	utilisation de la ApexCharts Card
 
-v20210921 - fk
+v20210921 - frtz13
 	fixed equality operator in gazpar_ha.sh
 	requirements file modified
 	dont overwrite monthly values with empty result
@@ -14,6 +14,12 @@ v20210921 - fk
 	un peu de refactoring
 	log de la veille sauvegardé dans le fichier previous.log
 
-30/9/2021 - fk
+30/9/2021 - frtz13
     Readme: ajout déclarations des Sensors en m3
 	Readme: modification de la condition de l'automatisation GRDF Get Data
+
+v2021.10.04 - frtz13
+	nouveau script d'accès à l'espace client GRDF afin de récupérer aussi les données de consommation en m3.
+	ajout de nouveaux Sensors dans la configuration de Home Assistant.
+	nouvel argument de ligne de commande pour gazpar_ha.py: sensor_nolog: aucune écirture dans le log, tant que tout va bien.
+	changement de nom des fichiers qui enregistrent les données de consommation, et le log des activités.

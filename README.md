@@ -2,7 +2,7 @@
 
 ## Objectif
 
-L'objectif est de récupérer la consommation journalière de gaz et de le représenter sous forme d'un diagramme à barres d'un *sensor* dans Home Assistant, chaque barre correspondant à la consommation de la veille.
+L'objectif est de récupérer la consommation journalière de gaz (en kWh et en m<sup>3</sup>) et de le représenter sous forme d'un diagramme à barres d'un *sensor* dans Home Assistant, chaque barre correspondant à la consommation de la veille.
 
 <img title="" src="./img/conso-graph.png" alt="Graphique de la consommation" data-align="center">
 
@@ -58,9 +58,9 @@ NB: selon votre contexte de travail, il est possible qu'il soit nécessaire de f
 
 Si vous utilisez déjà une version précédente du gazpar_cl_sensor:
 
-- Remplacez gazpar_ha.py par la nouvelle version.
+- Remplacez les fichiers qui ont été modifiés.
 
-- Le cas échéant, modiez la configuration du Sensor dans Home Assistant, afin d'obtenir les nouveaux Sensors de consommation mensuelle.
+- Complétez et modiez les définitions des Sensors dans Home Assistant.
 
 - (Recommandé) Installez Apex Graph card.
 
@@ -92,7 +92,19 @@ sensor:
       - conso_curr_month
       - conso_prev_month
       - log
-    value_template: '{{ value_json.conso | round(0) }}'
+    value_template: '{{ value_json.conso }}'
+
+  - platform: command_line
+    name: GRDF consommation gaz (m3)
+    command: "/config/gazpar/gazpar_ha.sh sensor_nolog"
+    scan_interval: 100000000
+    unit_of_measurement: "m3"
+    json_attributes:
+      - conso_curr_month_m3
+      - conso_prev_month_m3
+      - log
+    value_template: '{{ value_json.conso_m3 }}'
+
   - platform: template
     sensors:
       grdf_conso_curr_month:
@@ -103,6 +115,14 @@ sensor:
         friendly_name: "Consommation gaz mois précédent"
         unit_of_measurement: "kWh"
         value_template: "{{ state_attr('sensor.grdf_consommation_gaz', 'conso_prev_month') }}"
+      grdf_conso_curr_month_m3:
+        friendly_name: "Consommation gaz mois courant (m3)"
+        unit_of_measurement: "m3"
+        value_template: "{{ state_attr('sensor.grdf_consommation_gaz_m3', 'conso_curr_month_m3') }}"
+      grdf_conso_prev_month_m3:
+        friendly_name: "Consommation gaz mois précédent (m3)"
+        unit_of_measurement: "m3"
+        value_template: "{{ state_attr('sensor.grdf_consommation_gaz_m3', 'conso_prev_month_m3') }}"
 ```
 
 ```
@@ -111,35 +131,11 @@ shell_command:
     grdf_delete_data: '/config/gazpar/gazpar_ha.sh delete'
 ```
 
-NB: si *configuration.yaml* contient déjà une rubrique "sensor:", ne créez pas une nouvelle rubrique de ce nom, mais ajoutez la définition du "sensor" à la rubrique existante. Idem pour la partie *shell_command*.
+NB: si *configuration.yaml* contient déjà une rubrique "sensor:", ne créez pas une nouvelle rubrique de ce nom, mais ajoutez les définitions "sensor" à la rubrique existante. Idem pour la partie *shell_command*.
+
+NB2: L'appel de *gazpar_ha.sh* avec l'option sensor_nolog a pour but d'éviter d'ajouter trop de lignes dans le fichier log, visible dans les Attributs du Sensor.
 
 Ensuite, menu Configuration / Contrôle du serveur:  vérifier la configuration (très important de le faire chaque fois!), et si tout es ok, redémarrer Home Assistant.
-
-Si vous préférez les m<sup>3</sup> comme unité de mesure, vous pouvez définir les *Sensors* ainsi (avec le coefficient de conversion de 10.93 sur ma dernière facture de gaz):
-
-```
-sensor:
-  - platform: command_line
-    name: GRDF consommation gaz
-    command: "/config/gazpar/gazpar_ha.sh sensor"
-    scan_interval: 100000000
-    unit_of_measurement: "m3"
-    json_attributes:
-      - conso_curr_month
-      - conso_prev_month
-      - log
-    value_template: '{{ value_json.conso | multiply(1/10.93) | round(2) }}'
-  - platform: template
-    sensors:
-      grdf_conso_curr_month:
-        friendly_name: "Consommation gaz mois courant"
-        unit_of_measurement: "m3"
-        value_template: "{{ state_attr('sensor.grdf_consommation_gaz', 'conso_curr_month') | multiply(1/10.93) | round(2) }}"
-      grdf_conso_prev_month:
-        friendly_name: "Consommation gaz mois précédent"
-        unit_of_measurement: "m3"
-        value_template: "{{ state_attr('sensor.grdf_consommation_gaz', 'conso_prev_month')  | multiply(1/10.93) | round(2) }}"
-```
 
 ### Essais
 
@@ -147,13 +143,13 @@ Dans Home Assistant, rendez-vous dans Outils de développement / SERVICES, séle
 
 Ensuite, faites de même avec le service *shell_command.grdf_get_data*.Retournez à la ligne de commande et examinez le contenu de votre dossier *gazpar*.
 
-Si tout va bien, s'y trouvent des nouveaux fichiers: *export_days_values.json* et *export_days_values.log*, *export_months_values.log*. Vous pouvez consulter votre consommation des jours passés par la commande *cat export_days_values.json*.
+Si tout va bien, s'y trouvent des nouveaux fichiers: *conso_par_jour.json* et *activity.log*, *conso_par_mois.json*. Vous pouvez consulter votre consommation des jours passés par la commande *cat export_days_values.json*.
 
 Si aucun nouveau fichier n'est présent: vérifiez qu'il n'y a pas d'erreur au niveau du nom du dossier (écriture en majuscules/minuscules compte!).
 
 Si vous avez obtenu le fichiers *log* mais pas le fichier *json*: lisez le log; peut-être un problème avec les identifiants pour accéder à l'espace client GRDF, ou que l'accès à l'espace n'a pas permis de récupérer des données de consommation (dans ce cas, on trouve la mention "No results in data" dans le log). Dans ce cas, exécutez le SERVICE une nouvelle fois dans Home Assistant.
 
-Lançons maintenant la mise à jour de notre *sensor*: rendez-vous dans Outils de développement / SERVICES, sélectionnez le service *homeassistant.update_entity* puis l'Entité *sensor.grdf_consommation_gaz*, puis appuyez sur "Call SERVICE". Puis regardez dans Outils de développement / ETATS, si votre Entité *sensor.grdf_consommation_gaz* a bien été mis à jour avec la consommation de la veille. Si elle porte la valeur -1, cela signifie que la consommation de la veille n'est pas encore disponible (vérifiez!). La valeur -2 signifie que le fichier *export_days_values.json* n'a pas été trouvé.
+Lançons maintenant la mise à jour de notre *sensor*: rendez-vous dans Outils de développement / SERVICES, sélectionnez le service *homeassistant.update_entity* puis l'Entité *sensor.grdf_consommation_gaz*, puis appuyez sur "Call SERVICE". Puis regardez dans Outils de développement / ETATS, si votre Entité *sensor.grdf_consommation_gaz* a bien été mis à jour avec la consommation de la veille. Si elle porte la valeur -1, cela signifie que la consommation de la veille n'est pas encore disponible (vérifiez!).
 
 ### Automatisation de la lecture de la consommation de la veille
 
@@ -164,7 +160,7 @@ Pour rendre la connexion à l'espace client automatique, nous ajoutons une *Auto
 - Déclencheur: type: Modèle de temps, Heures: 18, Minutes: /10, Secondes: 0
   ce qui signifie: entre 18 et 19 heures, déclencher cette *Automatisation* toutes les 10 minutes.
 
-- Conditions: type: Valeur numérique, Entité: sensor.grdf_consommation_gaz, en dessous de: -0.01
+- Conditions: type: Valeur numérique, Entité: sensor.grdf_consommation_gaz, en dessous de: -0.5
 
 - Actions:
   
@@ -172,7 +168,7 @@ Pour rendre la connexion à l'espace client automatique, nous ajoutons une *Auto
   
   - type: *Délai*, valeur: 00:02:00
   
-  - type: *Appeler un service*, service: *homeassistant.update_entity*: *sensor.grdf_consommation_gaz*.
+  - type: *Appeler un service*, service: *homeassistant.update_entity*: *sensor.grdf_consommation_gaz* et *sensor.grdf_consommation_gaz_m3*.
 
 Quelques remarques:
 
@@ -182,9 +178,7 @@ Quelques remarques:
 
 - Le délai dans les Actions laissera un peu de temps à l'action précédente de se terminer, même si Home Assistant perd la patience au bout de 10s.
 
-- Ne vous laissez pas intimider par le fait que la liste de sélection de l'Entité pour le Service homeassistant.update_entity soit vide. Tapez son nom en toutes lettres.
-
-Une chose est encore à faire: peu avant minuit, la valeur du *sensor* doit être remis à zéro. Donc, une autre Automatisation:
+Une chose est encore à faire: peu avant minuit, la valeur du *sensor* doit être remis à l'état *inconnu*. Donc, une autre Automatisation:
 
 - Nom: *GRDF reset*, Mode: Unique
 
@@ -196,7 +190,7 @@ Une chose est encore à faire: peu avant minuit, la valeur du *sensor* doit êtr
   
   - type: Délai, valeur: 00:01:00
   
-  - type *Appeler un service*, service: *homeassistant.update_entity:* *sensor.grdf_consommation_gaz*.
+  - type *Appeler un service*, service: *homeassistant.update_entity:* *sensor.grdf_consommation_gaz* et *sensor.grdf_consommation_gaz_m3*.
 
 ### Le graphique
 
@@ -236,8 +230,6 @@ apex_config:
     min: 0
 ```
 
-Ne cherchez pas le configurateur graphique pour ce graphique... actuellement, il n'y en a pas.
-
 --
 
-Un grand merci à [Emmanuel](https://github.com/empierre) pour son travail de développement qui a été le point de départ pour ce projet.
+Un grand merci à [Emmanuel](https://github.com/empierre) et à [Fabien](https://github.com/beufanet) pour l'élaboration du script d'accès à l'espace client GRDF.

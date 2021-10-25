@@ -24,14 +24,13 @@ import os
 import datetime
 import logging
 import sys
+import base64
 import json
 import gazpar
 from dateutil.relativedelta import relativedelta
 
-PROG_VERSION = "2021.10.04"
+PROG_VERSION = "2021.10.22"
 
-USERNAME = os.environ['GAZPAR_USERNAME']
-PASSWORD = os.environ['GAZPAR_PASSWORD']
 BASEDIR = os.environ['BASE_DIR']
 
 DAILY = "conso_par_jour"
@@ -47,6 +46,7 @@ CMD_Sensor_Nolog = "sensor_nolog"
 CMD_Delete = "delete"
 
 UNKNOWN = {'kwh':-1, 'mcube':-1}
+ZERO = {'kwh':0, 'mcube':0}
 
 def dtostr(date):
 # Date formatting, like in data returned from GRDF
@@ -77,10 +77,10 @@ def export_daily_values(res):
 def get_monthly_conso(res, offset) -> dict:
     strMonth = datetime.date.today() - relativedelta(months=offset)
     try:
-        conso = res.get(mtostr(strMonth), UNKNOWN)
+        conso = res.get(mtostr(strMonth), ZERO)
         return conso
     except Exception as exc:
-        return UNKNOWN
+        return ZERO
     return retval
 
 def export_monthly_values(res):
@@ -106,8 +106,23 @@ def fetch_data():
     write daily and monthly result to json files
     """
     add_daily_log()
+
+    if len(sys.argv) < 6:
+        logging.error(f"Pas assez de paramètres sur la ligne de commande ({len(sys.argv) - 1} au lieu de 3)")
+        return False
+
+    # we transfer login info in base64 encoded form to avoid any interpretation of special characters
     try:
-        # logging.info("logging in as %s...", USERNAME)
+        user_bytes = base64.b64decode(sys.argv[2])
+        USERNAME = user_bytes.decode("utf-8")
+        pwd_bytes = base64.b64decode(sys.argv[3])
+        PASSWORD = pwd_bytes.decode("utf-8")
+    except Exception as exc:
+        logging.error(f"Cannot b64decode username ({sys.argv[2]}) or password ({sys.argv[3]}): " + str(exc))
+        return False
+
+    try:
+        # logging.info(f"logging in as {USERNAME}, {PASSWORD}...")
         token = gazpar.login(USERNAME, PASSWORD)
         # logging.info("logged in successfully!")
 
@@ -171,8 +186,8 @@ def sensor(writelog):
                 conso_m = get_monthly_conso(res_month, 0)
                 conso_mm1 = get_monthly_conso(res_month, 1)
         else:
-            conso_m = UNKNOWN
-            conso_mm1 = UNKNOWN
+            conso_m = ZERO
+            conso_mm1 = ZERO
 
         try:
             if os.path.exists(DAILY_json_log):
@@ -182,8 +197,8 @@ def sensor(writelog):
             pass
     except Exception as e:
         conso = UNKNOWN
-        conso_m = UNKNOWN
-        conso_mm1 = UNKNOWN
+        conso_m = ZERO
+        conso_mm1 = ZERO
         logging.error("Error reading result json file: " + str(e))
     dictRet = {
                "conso": conso['kwh'],
@@ -234,7 +249,7 @@ def main():
 #    logging.basicConfig(filename=BASEDIR + "/" + LOGFILE, format='%(asctime)s %(message)s', level=logging.INFO)
     
     arg_errmsg = f"use one of the following command line argugmnts: {CMD_Fetch}, {CMD_Sensor}, {CMD_Sensor_Nolog} or {CMD_Delete}"
-    if len(sys.argv) > 1:
+    if len(sys.argv) > 3:
         if sys.argv[1] == CMD_Fetch:
             if not fetch_data():
                 sys.exit(1)

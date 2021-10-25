@@ -23,3 +23,9 @@ v2021.10.04 - frtz13
 	ajout de nouveaux Sensors dans la configuration de Home Assistant.
 	nouvel argument de ligne de commande pour gazpar_ha.py: sensor_nolog: aucune écirture dans le log, tant que tout va bien.
 	changement de nom des fichiers qui enregistrent les données de consommation, et le log des activités.
+
+v2021.10.22 - frtz13
+    retourner 0 kWh et 0 m3 quand la consommation mensuelle n'est pas connu
+	definition du sensor pour le Tableau de bord énergie de Home Assistant
+	transfert du login/mot de passe de l'espace client GRDF vers secrets.yaml
+	documentation

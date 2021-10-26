@@ -108,7 +108,7 @@ sensor:
         friendly_name: "Consommation gaz mois précédent"
         unit_of_measurement: "kWh"
         value_template: "{{ state_attr('sensor.grdf_consommation_gaz', 'conso_prev_month') }}"
-      grdf_conso_m3:
+      grdf_consommation_gaz_m3:
         friendly_name: "Consommation gaz (m3)"
         unit_of_measurement: "m3"
         value_template: "{{ state_attr('sensor.grdf_consommation_gaz', 'conso_m3') }}"

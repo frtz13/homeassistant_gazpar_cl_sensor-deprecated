@@ -6,6 +6,8 @@ L'objectif est de récupérer la consommation journalière de gaz (en kWh et en 
 
 <img title="" src="./img/conso-graph.png" alt="Graphique de la consommation" data-align="center">
 
+![](C:\Users\fritz\source\repos\homeassistant_gazpar_cl_sensor\img\ha_energy_gas.png)
+
 ## Principe de fonctionnement
 
 L'intégration dans Home Assistant nécessitera un peu de patience et nous fera visiter quelques aspects de ce système.

@@ -62,7 +62,7 @@ Si vous utilisez déjà une version précédente du gazpar_cl_sensor:
 
 - Supprimez gazpar_ha.cfg et inscrivez votre nom d'utilisateur et mot de passe de connexion à l'espace client de GRDF dans *secrets.yaml*.
 
-- (Recommandé) Installez Apex Graph card.
+- (Recommandé) Installez Apex Graph card (v. 1.10.0 ou plus récente).
 
 ## Paramétrer l'accès à l'espace client GRDF
 
@@ -219,7 +219,7 @@ Son installation se résume grosso-modo à:
 Enfin, dans votre tableau de bord, ajoutez y une carte de type *Personnalisé: ApexCharts Card*, Dans la configuration de la carte, copiez/collez te texte suivant:
 
 ```
-type: 'custom:apexcharts-card'
+ype: 'custom:apexcharts-card'
 graph_span: 10d1s
 span:
   end: day
@@ -228,19 +228,30 @@ header:
   title: Consommation gaz
   show_states: false
   standard_format: true
+yaxis:
+  - min: 0
+    decimals: 0
+    apex_config:
+      - forceNiceScale: true
 series:
   - entity: sensor.grdf_consommation_gaz
     type: column
     offset: +1day
+    float_precision: 0
     show:
       name_in_header: false
     group_by:
       func: max
       duration: 1d
-apex_config:
-  yaxis:
-    min: 0
 ```
+
+Si vous voulez afficher des données de consommation en m<sup>3</sup>, modifiez le paramètre "entity", et configurez "yaxis/decimals" et "series/float_precision" à la valeur 2. 
+
+### Encore quelques remarques "en vrac":
+
+Le premier du mois, le "mois courant" correspond toujours au mois qui vient de se terminer. Ceci pour tenir compte du fait que les données de consommation arrivent avec un jour de retard.
+
+Dans le tableau de bord Energie de Home Assistant, la consommation de gaz au jour le jour aura un décalage d'un jour (contrairement au graphique apexcharts-card auquel nous avons pu imposer un décalage d'un jour afin de le caler correctement).
 
 --
 

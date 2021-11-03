@@ -29,7 +29,7 @@ import json
 import gazpar
 from dateutil.relativedelta import relativedelta
 
-PROG_VERSION = "2021.10.22"
+PROG_VERSION = "2021.11.02"
 
 BASEDIR = os.environ['BASE_DIR']
 
@@ -75,7 +75,8 @@ def export_daily_values(res):
         json.dump(res, outfile)
 
 def get_monthly_conso(res, offset) -> dict:
-    strMonth = datetime.date.today() - relativedelta(months=offset)
+    # aussi la consommation mensuelle arrive avec un jour de retard
+    strMonth = datetime.date.today() - relativedelta(days=1) - relativedelta(months=offset)
     try:
         conso = res.get(mtostr(strMonth), ZERO)
         return conso
@@ -85,9 +86,9 @@ def get_monthly_conso(res, offset) -> dict:
 
 def export_monthly_values(res):
 #   Export the JSON file of monthly consumption
-#   check that we have at least one value in array
-#   otherwise, we may lose the previous month's conso
-    if len(res) > 0:
+#   check that we have at more than one value in array
+#   otherwise, we may lose the previous monthly consumption
+    if len(res) > 1:
         with open(MONTHLY_json, 'w') as outfile:
             json.dump(res, outfile)
 
@@ -138,18 +139,20 @@ def fetch_data():
                                           dtostr(today - relativedelta(days=1)),
                                           dtostr(today - relativedelta(days=2))
                                          )
+        if len(res_day) > 1 and len(res_month) > 1:
+            logging.info("Received data")
 
-        logging.info("Received data")
-
-        try:
-            export_daily_values(res_day)
-            export_monthly_values(res_month)
-            print("done.")
-            return True
-        except Exception as exc:
-            logging.info("daily/monthly conso not exported")
-            logging.error(exc)
-            return False
+            try:
+                export_daily_values(res_day)
+                export_monthly_values(res_month)
+                print("done.")
+                return True
+            except Exception as exc:
+                logging.info("daily/monthly conso not exported")
+                logging.error(exc)
+                return False
+        else:
+          logging.info("No data received")
  
     except gazpar.GazparLoginException as exc:
         logging.error(exc)

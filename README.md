@@ -218,21 +218,21 @@ Enfin, dans votre tableau de bord, ajoutez y une carte de type *Personnalisé: A
 
 ```
 ype: 'custom:apexcharts-card'
-graph_span: 10d1s
+graph_span: 12d
 span:
   end: day
 header:
   show: true
-  title: Consommation gaz
+  title: Consommation gaz (m³)
   show_states: false
   standard_format: true
 yaxis:
   - min: 0
     decimals: 0
     apex_config:
-      - forceNiceScale: true
+      forceNiceScale: true
 series:
-  - entity: sensor.grdf_consommation_gaz
+  - entity: sensor.grdf_consommation_gaz_m3
     type: column
     offset: +1day
     float_precision: 0
@@ -250,8 +250,6 @@ Si vous voulez afficher des données de consommation en m<sup>3</sup>, modifiez 
 Le premier du mois, le "mois courant" correspond toujours au mois qui vient de se terminer. Ceci pour tenir compte du fait que les données de consommation arrivent avec un jour de retard.
 
 Dans le tableau de bord Energie de Home Assistant, la consommation de gaz au jour le jour aura un décalage d'un jour (contrairement au graphique apexcharts-card auquel nous avons pu imposer un décalage d'un jour afin de le caler correctement).
-
-La copie d'écran au début de cette page, et la configuration du graphique ci-dessus, ne correspondent pas dans tous les détails. Ma consommation de gaz est actuellement trop faible pour faire une nouvelle copie d'écran significative.
 
 --
 

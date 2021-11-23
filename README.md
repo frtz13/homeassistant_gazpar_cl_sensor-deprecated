@@ -1,5 +1,11 @@
 ﻿# homeassistant_gazpar_cl_sensor
 
+****
+
+23/11/2021: Suite à un changement d'implémentation de l'accès à l'espace client GRDF, la récupération des données de consommation ne fonctionne plus.
+
+*** 
+
 ## Objectif
 
 L'objectif est de récupérer la consommation journalière de gaz (en kWh et en m<sup>3</sup>) et de la représenter sous forme d'un diagramme à barres dans Home Assistant, chaque barre correspondant à la consommation de la veille. La consommation peut également être intégrée dans le Tableau de bord Energie de Home Assistant.

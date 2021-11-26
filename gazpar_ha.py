@@ -4,7 +4,7 @@
 # Adapted to Home Assistant by frtz13
 # homeassistant_gazpar_cl_sensor
 
-"""Returns energy consumption data from GrDf consumption data collected via their website (API).
+"""Returns energy consumption data from GRDF consumption data collected via their website (API).
 """
 
 # This program is free software: you can redistribute it and/or modify
@@ -27,17 +27,14 @@ import sys
 import base64
 import json
 import gazpar
-from dateutil.relativedelta import relativedelta
 
-PROG_VERSION = "2021.11.02"
+PROG_VERSION = "2021.11.26"
 
 BASEDIR = os.environ['BASE_DIR']
 
-DAILY = "conso_par_jour"
+DAILY = "releve_du_jour"
 DAILY_json = os.path.join(BASEDIR, DAILY + ".json")
 DAILY_json_log = os.path.join(BASEDIR, "activity.log")
-MONTHLY = "conso_par_mois"
-MONTHLY_json = os.path.join(BASEDIR, MONTHLY + ".json")
 
 # command line commands
 CMD_Fetch = "fetch"
@@ -45,52 +42,16 @@ CMD_Sensor = "sensor"
 CMD_Sensor_Nolog = "sensor_nolog"
 CMD_Delete = "delete"
 
-UNKNOWN = {'kwh':-1, 'mcube':-1}
-ZERO = {'kwh':0, 'mcube':0}
-
-def dtostr(date):
-# Date formatting, like in data returned from GRDF
-    return date.strftime("%d/%m/%Y")
-
-def mtostr(date):
-# month formatting, like in data returned from GRDF
-    return date.strftime("%m/%Y")
-
-
-def get_yesterday_conso(res, writelog):
-#   extraction de la consommation de la veille
-    yesterday = datetime.date.today() - relativedelta(days=1)
-    try:
-        conso = res.get(dtostr(yesterday), UNKNOWN)
-        if writelog:
-            logging.info("returning conso: " + str(conso))
-    except Exception as exc:
-        logging.error("Invalid daily data format found: " + str(exc))
-        conso = UNKNOWN
-    return conso
+KEY_INDEX_M3 = "index_m3"
+KEY_DATE = "date"
+KEY_CONSO_kWh = "conso_kWh"
+KEY_CONSO_m3 = "conso_m3"
+KEY_NEWDATA = "new_data"
 
 # Export the JSON file for daily consumption
 def export_daily_values(res):
     with open(DAILY_json, 'w') as outfile:
         json.dump(res, outfile)
-
-def get_monthly_conso(res, offset) -> dict:
-    # aussi la consommation mensuelle arrive avec un jour de retard
-    strMonth = datetime.date.today() - relativedelta(days=1) - relativedelta(months=offset)
-    try:
-        conso = res.get(mtostr(strMonth), ZERO)
-        return conso
-    except Exception as exc:
-        return ZERO
-    return retval
-
-def export_monthly_values(res):
-#   Export the JSON file of monthly consumption
-#   check that we have at more than one value in array
-#   otherwise, we may lose the previous monthly consumption
-    if len(res) > 1:
-        with open(MONTHLY_json, 'w') as outfile:
-            json.dump(res, outfile)
 
 def add_daily_log():
     logging.basicConfig(filename=DAILY_json_log, format='%(asctime)s %(message)s', datefmt='%d/%m/%Y %H:%M:%S', level=logging.INFO)
@@ -101,6 +62,18 @@ def add_daily_log():
     #logToFile.setFormatter(formatter)
     #logging.getLogger('').addHandler(logToFile)
 
+def read_releve_from_file():
+    try:
+        if os.path.exists(DAILY_json):
+            with open(DAILY_json, 'r') as infile:
+                return json.load(infile)
+        else:
+            return None
+    except Exception as e:
+        logging.error("Error reading releve json file: " + str(e))
+        return None
+
+
 def fetch_data():
     """
     get data from GRDF
@@ -108,8 +81,8 @@ def fetch_data():
     """
     add_daily_log()
 
-    if len(sys.argv) < 6:
-        logging.error(f"Pas assez de paramètres sur la ligne de commande ({len(sys.argv) - 1} au lieu de 3)")
+    if len(sys.argv) < 7:
+        logging.error(f"Pas assez de paramètres sur la ligne de commande ({len(sys.argv) - 1} au lieu de 6)")
         return False
 
     # we transfer login info in base64 encoded form to avoid any interpretation of special characters
@@ -118,56 +91,62 @@ def fetch_data():
         USERNAME = user_bytes.decode("utf-8")
         pwd_bytes = base64.b64decode(sys.argv[3])
         PASSWORD = pwd_bytes.decode("utf-8")
+        PCE = sys.argv[4]
     except Exception as exc:
         logging.error(f"Cannot b64decode username ({sys.argv[2]}) or password ({sys.argv[3]}): " + str(exc))
         return False
 
+# get saved consumption result and date, so we know when we will get new values
+    daily_values = read_releve_from_file()
+    if daily_values is None:
+        old_date = "1970-01-01"
+    else:
+        old_date = daily_values[KEY_DATE]
+
     try:
-        # logging.info(f"logging in as {USERNAME}, {PASSWORD}...")
-        token = gazpar.login(USERNAME, PASSWORD)
-        # logging.info("logged in successfully!")
-
-        # logging.info("retrieving data...")
-        today = datetime.date.today()
-
-        # 12 months ago - today
-        res_month = gazpar.get_data_per_month(token, dtostr(today - relativedelta(months=2)), dtostr(today))
-
-        # on demande la consommation d'il y a 2 jours et la veille
-        # mais le résultat semble toujours inclure plus de données
-        res_day = gazpar.get_data_per_day(token,
-                                          dtostr(today - relativedelta(days=1)),
-                                          dtostr(today - relativedelta(days=2))
-                                         )
-        if len(res_day) > 1 and len(res_month) > 1:
-            logging.info("Received data")
-
-            try:
-                export_daily_values(res_day)
-                export_monthly_values(res_month)
-                print("done.")
-                return True
-            except Exception as exc:
-                logging.info("daily/monthly conso not exported")
-                logging.error(exc)
-                return False
-        else:
-          logging.info("No data received")
- 
+        grdf_client = gazpar.Gazpar(USERNAME, PASSWORD, PCE)
+        result_json = grdf_client.get_consumption()
     except gazpar.GazparLoginException as exc:
-        logging.error(exc)
-        print("Error occurred: " + str(exc))
+        strErrMsg = "[Login error] " + str(exc)
+        logging.error(strErrMsg)
+        print("Error occurred: " + strErrMsg)
         return False
-    except gazpar.GazparServiceException as exc:
+    except Exception as exc:
+        strErrMsg = "[Error] " + str(exc)
+        logging.error(strErrMsg)
+        print(strErrMsg)
+        return False
+        
+    try:
+        dictLatest = result_json["releves"][-1]
+        daily_values = {KEY_DATE: dictLatest["journeeGaziere"],
+                        KEY_CONSO_kWh: dictLatest["energieConsomme"],
+                        KEY_CONSO_m3: dictLatest["indexFin"] - dictLatest["indexDebut"],
+                        KEY_INDEX_M3: dictLatest["indexFin"],
+                        KEY_NEWDATA: True,
+                        }
+    except Exception as exc:
+        strErrMsg = "[No data received] " + str(exc)
         logging.error(exc)
         print(str(exc))
         return False
-    except Exception as e:
-        logging.error(str(e))
-        print("Error occurred: " + str(e))
-        return False
 
-def sensor(writelog):
+    try:
+        if daily_values[KEY_DATE] == old_date:
+            logging.info("No new data")
+        else:
+            logging.info("Received data")
+            export_daily_values(daily_values)
+        print("done.")
+        return True
+    except Exception as exc:
+        strErrMsg = "[Data Export] " + str(exc)
+        logging.error(strErrMsg)
+        print(strErrMsg)
+        return False
+ 
+
+def sensor():
     """
     get conso from json result file
     get corresponding log
@@ -176,21 +155,9 @@ def sensor(writelog):
     dailylog = ""
     add_daily_log()
     try:
-        if os.path.exists(DAILY_json):
-            with open(DAILY_json, 'r') as infile:
-                res_day = json.load(infile)
-                conso = get_yesterday_conso(res_day, writelog)
-        else:
-            conso = UNKNOWN
-
-        if os.path.exists(MONTHLY_json):
-            with open(MONTHLY_json, 'r') as infile:
-                res_month = json.load(infile)
-                conso_m = get_monthly_conso(res_month, 0)
-                conso_mm1 = get_monthly_conso(res_month, 1)
-        else:
-            conso_m = ZERO
-            conso_mm1 = ZERO
+        daily_values = read_releve_from_file()
+        if daily_values is None:
+            return False
 
         try:
             if os.path.exists(DAILY_json_log):
@@ -198,21 +165,14 @@ def sensor(writelog):
                     dailylog = logfile.read().splitlines()
         except:
             pass
+
+        daily_values["log"] = "\r\n".join(dailylog)
+        print(json.dumps(daily_values))
+        return True
     except Exception as e:
-        conso = UNKNOWN
-        conso_m = ZERO
-        conso_mm1 = ZERO
         logging.error("Error reading result json file: " + str(e))
-    dictRet = {
-               "conso": conso['kwh'],
-               "conso_m3": conso['mcube'],
-               "conso_curr_month": conso_m['kwh'],
-               "conso_curr_month_m3": conso_m['mcube'],
-               "conso_prev_month": conso_mm1['kwh'],
-               "conso_prev_month_m3": conso_mm1['mcube'],
-               "log": "\r\n".join(dailylog),
-               }
-    print(json.dumps(dictRet))
+        return False
+
 
 def delete_json():
     """
@@ -220,13 +180,23 @@ def delete_json():
     to avoid the current conso be carried over to the next day
     """
     ok = True
+    daily_values = read_releve_from_file()
+    if daily_values is None:
+        daily_values = {KEY_DATE: "1970-1-1",
+                        KEY_CONSO_kWh: -1,
+                        KEY_CONSO_m3: -1,
+                        KEY_NEWDATA: False,
+                        }
+    else:
+        daily_values[KEY_CONSO_kWh] = -1
+        daily_values[KEY_CONSO_m3] = -1
+        daily_values[KEY_NEWDATA] = False
+
     try:
-        dictNull = {}
-        dictNull[dtostr(datetime.date.today() - relativedelta(days=2))] = UNKNOWN
-        export_daily_values(dictNull)
+        export_daily_values(daily_values)
     except Exception as e:
         #logging.ERROR("error when replacing json result file: " + str(e))
-        print("error when replacing json result file: " + str(e))
+        print("error when replacing releve file: " + str(e))
         ok = False
     
     PREVIOUS_LOG = os.path.join(BASEDIR, "previous.log")
@@ -237,12 +207,12 @@ def delete_json():
             os.rename(DAILY_json_log, PREVIOUS_LOG)
     except Exception as e:
         #logging.ERROR("error when deleting result log file: " + str(e))
-        print("error when deleting/renaming result log file: " + str(e))
+        print("error when deleting/renaming log file: " + str(e))
         ok = False
 
     add_daily_log()
     logging.info(f"Script version {PROG_VERSION}")
-    logging.info("conso set to -1 (unknown)")
+    logging.info("reset releve status")
     print("done.")
     return ok
 
@@ -256,10 +226,9 @@ def main():
         if sys.argv[1] == CMD_Fetch:
             if not fetch_data():
                 sys.exit(1)
-        elif sys.argv[1] == CMD_Sensor:
-            sensor(True)
-        elif sys.argv[1] == CMD_Sensor_Nolog:
-            sensor(False)
+        elif (sys.argv[1] == CMD_Sensor) or (sys.argv[1] == CMD_Sensor_Nolog):
+            if not sensor():
+                sys.exit(1)
         elif sys.argv[1] == CMD_Delete:
             if not delete_json():
                 sys.exit(1)

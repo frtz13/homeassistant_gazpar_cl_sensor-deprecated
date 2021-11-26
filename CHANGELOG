@@ -1,10 +1,33 @@
-v20210120 - frtz13
-	version initiale
+v2021.11.26 - frtz13
+	Breaking change: suite à la modification de l'espace client GRDF, le donnes de consommation
+	  mensuelles ne sont plus disponibles, et les Sensors correspondants n'existent plus.
+	  Le Sensor pouvant alimenter le Tableau de bord Energie est désormais le nouveau Sensor
+	  correspondant à l'index du compteur (en m3).
+	Change: les consommations journalières ne correspondent pas forcément à la consommation de la veille.
+	  Les Sensors sont alimentés lorsque de nouvelles données sont disponibles.
+	New: ajout du PCE à la configuration.
 
-v20210409 - frtz13
-    ajout de la consommation du mois en cours et du mois précédent dans les attributs du Sensor
-	ajout des Sensors pour la consommation du mois courant et du mois précédent
-	utilisation de la ApexCharts Card
+v2021.11.02 - frtz13
+	Détermination du "mois courant" avec un jour de décalage, pour tenir compte du fait
+	que les chiffres de consommation arrivent toujours avec un jour de retard.
+	Meilleure protection des données de consommation mensuelles déjà enregistrés quand
+	la connexion ne les retourne pas.
+	adaptation du code pour la apex-charts-card à la version 1.10.0 de cette dernière.
+
+v2021.10.22 - frtz13
+    retourner 0 kWh et 0 m3 quand la consommation mensuelle n'est pas connu
+	definition du sensor pour le Tableau de bord énergie de Home Assistant
+	transfert du login/mot de passe de l'espace client GRDF vers secrets.yaml
+
+v2021.10.04 - frtz13
+	nouveau script d'accès à l'espace client GRDF afin de récupérer aussi les données de consommation en m3.
+	ajout de nouveaux Sensors dans la configuration de Home Assistant.
+	nouvel argument de ligne de commande pour gazpar_ha.py: sensor_nolog: aucune écirture dans le log, tant que tout va bien.
+	changement de nom des fichiers qui enregistrent les données de consommation, et le log des activités.
+
+30/9/2021 - frtz13
+    Readme: ajout déclarations des Sensors en m3
+	Readme: modification de la condition de l'automatisation GRDF Get Data
 
 v20210921 - frtz13
 	fixed equality operator in gazpar_ha.sh
@@ -14,24 +37,10 @@ v20210921 - frtz13
 	un peu de refactoring
 	log de la veille sauvegardé dans le fichier previous.log
 
-30/9/2021 - frtz13
-    Readme: ajout déclarations des Sensors en m3
-	Readme: modification de la condition de l'automatisation GRDF Get Data
+v20210409 - frtz13
+    ajout de la consommation du mois en cours et du mois précédent dans les attributs du Sensor
+	ajout des Sensors pour la consommation du mois courant et du mois précédent
+	utilisation de la ApexCharts Card
 
-v2021.10.04 - frtz13
-	nouveau script d'accès à l'espace client GRDF afin de récupérer aussi les données de consommation en m3.
-	ajout de nouveaux Sensors dans la configuration de Home Assistant.
-	nouvel argument de ligne de commande pour gazpar_ha.py: sensor_nolog: aucune écirture dans le log, tant que tout va bien.
-	changement de nom des fichiers qui enregistrent les données de consommation, et le log des activités.
-
-v2021.10.22 - frtz13
-    retourner 0 kWh et 0 m3 quand la consommation mensuelle n'est pas connu
-	definition du sensor pour le Tableau de bord énergie de Home Assistant
-	transfert du login/mot de passe de l'espace client GRDF vers secrets.yaml
-
-v2021.11.02 - frtz13
-	Détermination du "mois courant" avec un jour de décalage, pour tenir compte du fait
-	que les chiffres de consommation arrivent toujours avec un jour de retard.
-	Meilleure protection des données de consommation mensuelles déjà enregistrés quand
-	la connexion ne les retourne pas.
-	adaptation du code pour la apex-charts-card à la version 1.10.0 de cette dernière.
+v20210120 - frtz13
+	version initiale

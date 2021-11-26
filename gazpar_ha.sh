@@ -10,7 +10,7 @@ export PYTHONWARNINGS="ignore"
 run_script () {
   PY_SCRIPT="gazpar_ha.py"
   PY_SCRIPT="${BASE_DIR}"/"${PY_SCRIPT}"
-  python3 "${PY_SCRIPT}" $1 $2 $3 -o "${BASE_DIR}" 2>&1
+  python3 "${PY_SCRIPT}" $1 $2 $3 $4 -o "${BASE_DIR}" 2>&1
 }
 
 # check requirements and configuration file
@@ -23,4 +23,4 @@ then
   fi
 fi
 
-run_script $1 $2 $3
+run_script $1 $2 $3 $4

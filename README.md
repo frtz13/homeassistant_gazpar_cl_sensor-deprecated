@@ -203,7 +203,7 @@ Son installation se résume grosso-modo à:
 Enfin, dans votre tableau de bord, ajoutez y une carte de type *Personnalisé: ApexCharts Card*, Dans la configuration de la carte, copiez/collez te texte suivant:
 
 ```
-ype: 'custom:apexcharts-card'
+type: 'custom:apexcharts-card'
 graph_span: 12d
 span:
   end: day

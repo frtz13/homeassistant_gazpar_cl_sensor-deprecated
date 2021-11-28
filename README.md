@@ -157,7 +157,7 @@ Lançons maintenant la mise à jour de notre *sensor*: rendez-vous dans Outils d
 
 ### Automatisation de la lecture de la consommation de la veille
 
-Pour rendre la connexion à l'espace client automatique, nous ajoutons une *Automatisation* dans Home Assistant (Configuration / Automatisations
+Pour rendre la connexion à l'espace client automatique, nous ajoutons une *Automatisation* dans Home Assistant (Configuration / Automatisations).
 
 Commencer par une Automatisation vide:
 

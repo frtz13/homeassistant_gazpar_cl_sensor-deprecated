@@ -4,6 +4,7 @@
 # - removed retries (done by Automations in H.A.)
 # - changed return value
 # - added login success check and exception
+# - added simple check that we get some meaningful data
 
 import datetime
 import requests
@@ -49,8 +50,15 @@ class Gazpar:
             (datetime.datetime.now() - datetime.timedelta(days=7)).strftime('%Y-%m-%d'),
             datetime.datetime.now().strftime('%Y-%m-%d'),
             self.pce)
+        #url = 'https://monespace.grdf.fr/api/e-conso/pce/consommation/publiees?dateDebut={0}&dateFin={1}&pceList%5B%5D={2}'.format(
+        #    "2021-10-01",
+        #    "2021-11-01",
+        #    self.pce)
 #        print(url)
         session.get(url) # first try, never returns data
         # now get data
         response = session.get(url)
-        return response.json()[self.pce]
+        try:
+            return response.json()[self.pce]
+        except Exception as exc:
+            raise Exception("Invalid data received")

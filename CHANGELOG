@@ -1,3 +1,6 @@
+v2021.11.28 - frtz13
+    New: Sensor index_kWh qui cumule des valeurs "energieConsomme"
+
 v2021.11.26 - frtz13
 	Breaking change: suite à la modification de l'espace client GRDF, le donnes de consommation
 	  mensuelles ne sont plus disponibles, et les Sensors correspondants n'existent plus.

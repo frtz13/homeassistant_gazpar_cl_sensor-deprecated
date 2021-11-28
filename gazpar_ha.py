@@ -28,7 +28,7 @@ import base64
 import json
 import gazpar
 
-PROG_VERSION = "2021.11.26"
+PROG_VERSION = "2021.11.28"
 
 BASEDIR = os.environ['BASE_DIR']
 
@@ -43,6 +43,7 @@ CMD_Sensor_Nolog = "sensor_nolog"
 CMD_Delete = "delete"
 
 KEY_INDEX_M3 = "index_m3"
+KEY_INDEX_kWh = "index_kWh"
 KEY_DATE = "date"
 KEY_CONSO_kWh = "conso_kWh"
 KEY_CONSO_m3 = "conso_m3"
@@ -100,9 +101,13 @@ def fetch_data():
     daily_values = read_releve_from_file()
     if daily_values is None:
         old_date = "1970-01-01"
+        old_index_kWh = 0
     else:
         old_date = daily_values[KEY_DATE]
-
+        if KEY_INDEX_kWh in daily_values:
+            old_index_kWh = daily_values[KEY_INDEX_kWh]
+        else:
+            old_index_kWh = 0
     try:
         grdf_client = gazpar.Gazpar(USERNAME, PASSWORD, PCE)
         result_json = grdf_client.get_consumption()
@@ -122,17 +127,18 @@ def fetch_data():
         daily_values = {KEY_DATE: dictLatest["journeeGaziere"],
                         KEY_CONSO_kWh: dictLatest["energieConsomme"],
                         KEY_CONSO_m3: dictLatest["indexFin"] - dictLatest["indexDebut"],
+                        KEY_INDEX_kWh: old_index_kWh + dictLatest["energieConsomme"],
                         KEY_INDEX_M3: dictLatest["indexFin"],
                         KEY_NEWDATA: True,
                         }
     except Exception as exc:
         strErrMsg = "[No data received] " + str(exc)
-        logging.error(exc)
-        print(str(exc))
+        logging.error(strErrMsg)
+        print(str(strErrMsg))
         return False
 
     try:
-        if daily_values[KEY_DATE] == old_date:
+        if (daily_values[KEY_DATE] is None) or (daily_values[KEY_DATE] == old_date):
             logging.info("No new data")
         else:
             logging.info("Received data")
@@ -176,8 +182,9 @@ def sensor():
 
 def delete_json():
     """
-    delete json result file and last log file
-    to avoid the current conso be carried over to the next day
+    prepare json releve file for next day
+    reset daily conso to 'unknown'
+    create index_kWh in json so the Sensor will have a 0 initial value
     """
     ok = True
     daily_values = read_releve_from_file()
@@ -185,13 +192,15 @@ def delete_json():
         daily_values = {KEY_DATE: "1970-1-1",
                         KEY_CONSO_kWh: -1,
                         KEY_CONSO_m3: -1,
+                        KEY_INDEX_kWh: 0,
                         KEY_NEWDATA: False,
                         }
     else:
         daily_values[KEY_CONSO_kWh] = -1
         daily_values[KEY_CONSO_m3] = -1
         daily_values[KEY_NEWDATA] = False
-
+        if KEY_INDEX_kWh not in daily_values:
+            daily_values[KEY_INDEX_kWh] = 0
     try:
         export_daily_values(daily_values)
     except Exception as e:
@@ -212,7 +221,7 @@ def delete_json():
 
     add_daily_log()
     logging.info(f"Script version {PROG_VERSION}")
-    logging.info("reset releve status")
+    logging.info("reset daily conso")
     print("done.")
     return ok
 

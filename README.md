@@ -89,12 +89,13 @@ sensor:
     unit_of_measurement: "kWh"
     json_attributes:
       - conso_m3
+      - index_kWh
       - index_m3
       - date
       - log
     value_template: '{{ value_json.conso }}'
 
-# ce Sensor permettra d'ajouter la consommation au Tableau de bord Energie 
+# un de ces Sensors permettra d'ajouter la consommation au Tableau de bord Energie 
 template:
 - sensor:
     name: "Gas consumption index (m³)"
@@ -102,6 +103,13 @@ template:
     device_class: "gas"
     state_class: "total_increasing"
     state: "{{ state_attr('sensor.grdf_consommation_gaz', 'index_m3') }}"
+
+- sensor:
+    name: "Gas consumption index (kWh)"
+    unit_of_measurement: "kWh"
+    device_class: "energy"
+    state_class: "total_increasing"
+    state: "{{ state_attr('sensor.grdf_consommation_gaz', 'index_kWh') }}"
 
 # ce Sensor est optionnel
   - sensor:
@@ -127,11 +135,11 @@ NB: si *configuration.yaml* contient déjà une rubrique "sensor:", ne créez pa
 
 L'attribut *date* du *Sensor GRDF consommation gaz* correspond à la *Journée gazière*  du relevé. Cette date correspond à la veille du relevé du compteur, qui est effectuée tôt le matin. Au moment où j'écris ces lignes, je récupère les relevés avec deux jours de retard.
 
-Vous trouverez le PCE de votre installation dans votre facture de gaz.
+Vous trouverez le PCE de votre installation dans votre facture de gaz, ou dans votre espace client GRDF.
 
 Ensuite, menu Configuration / Contrôle du serveur:  vérifier la configuration (très important de le faire chaque fois!), et si tout est ok, redémarrer Home Assistant. Veuillez noter qu'il va falloir faire ceci aussi pour qu'une modification des infos dans *secrets.yaml* soit prise en compte.
 
-Vous pouvez ajouter le sensor *Gas consumption index (m<sup>3</sup>)* au Tableau de bord Energie de Home Assistant. 
+Vous pouvez ajouter le sensor *Gas consumption index (m<sup>3</sup>)* ou *Gas consumption index (kWh)* au Tableau de bord Energie de Home Assistant. 
 
 ### Essais
 
@@ -203,7 +211,7 @@ Son installation se résume grosso-modo à:
 Enfin, dans votre tableau de bord, ajoutez y une carte de type *Personnalisé: ApexCharts Card*, Dans la configuration de la carte, copiez/collez te texte suivant:
 
 ```
-ype: 'custom:apexcharts-card'
+type: 'custom:apexcharts-card'
 graph_span: 12d
 span:
   end: day
@@ -231,7 +239,7 @@ series:
 
 ### Encore quelques remarques "en vrac":
 
-Par rapport aux versions précédentes de ce command_line_sensor, la nature des données récupérées a changé avec la modification de l'espace client GRDF fin novembre 2021. Les consommations mensuelles ont disparu, et la valeur que nous pouvons intégrer dans le tableau de bord Energie est l'index du compteur (en m<sup>3</sup>). Une valeur correspondante en kWh n'est malheureusement pas disponible. Aussi, la précision de la consommaton en m3 a perdu en précision.
+Par rapport aux versions précédentes de ce command_line_sensor, la nature des données récupérées a changé avec la modification de l'espace client GRDF fin novembre 2021. Les consommations mensuelles ont disparu, et la valeur que nous pouvons intégrer dans le tableau de bord Energie est l'index du compteur (en m<sup>3</sup>), ou un compteur correspondant aux cumul de l'énergie consommée (en kWh) indiqué par GRDF dans les relevés journalières.
 
 Dans le tableau de bord Energie de Home Assistant, la consommation de gaz au jour le jour aura un décalage d'un jour (contrairement au graphique apexcharts-card auquel nous avons pu imposer un décalage d'un jour afin de le caler correctement). Encore, ce décalage est devenu plus grand depuis la mise à jour de l'espace client GRDF.
 

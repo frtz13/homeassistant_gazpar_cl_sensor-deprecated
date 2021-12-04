@@ -159,22 +159,45 @@ Lançons maintenant la mise à jour de notre *sensor*: rendez-vous dans Outils d
 
 Pour rendre la connexion à l'espace client automatique, nous ajoutons une *Automatisation* dans Home Assistant (Configuration / Automatisations).
 
-Commencer par une Automatisation vide:
+Commencer par une Automatisation vide, passez en mode YAML, et collez la définition suivante:
 
-- Nom: *GRDF get data*, Mode: Unique
-
-- Déclencheur: type: Modèle de temps, Heures: 18, Minutes: /10, Secondes: 0
-  ce qui signifie: entre 18 et 19 heures, déclencher cette *Automatisation* toutes les 10 minutes.
-
-- Conditions: type: Valeur numérique, Entité: sensor.grdf_consommation_gaz, en dessous de: -0.5
-
-- Puis trois Actions:
-  
-  - type *Appeler un service*: shell_command.grdf_get_data
-  
-  - type: *Délai*, valeur: 00:01:00
-  
-  - type: *Appeler un service*, service: *homeassistant.update_entity*: *sensor.grdf_consommation_gaz*.
+```
+alias: GRDF get data
+description: 'Récupérer les données de consommation'
+trigger:
+  - platform: time_pattern
+    hours: '20'
+    minutes: /30
+    seconds: '00'
+  - platform: time_pattern
+    hours: '21'
+    minutes: /30
+    seconds: '00'
+  - platform: time_pattern
+    hours: '22'
+    minutes: /30
+    seconds: '00'
+  - platform: time_pattern
+    hours: '23'
+    minutes: /10
+    seconds: '00'
+condition:
+  - condition: numeric_state
+    entity_id: sensor.grdf_consommation_gaz
+    below: '-0.5'
+action:
+  - service: shell_command.grdf_get_data
+  - delay:
+      hours: 0
+      minutes: 1
+      seconds: 0
+      milliseconds: 0
+  - service: homeassistant.update_entity
+    target:
+      entity_id:
+        - sensor.grdf_consommation_gaz
+mode: single
+```
 
 Quelques remarques:
 
@@ -186,17 +209,25 @@ Quelques remarques:
 
 Une chose est encore à faire: peu avant minuit, la valeur du *sensor* doit être remis à l'état *inconnu*. Donc, une autre Automatisation:
 
-- Nom: *GRDF reset*, Mode: Unique
+```
+alias: GRDF reset
+description: 'Effacer données de consommation journalières'
+trigger:
+  - platform: time
+    at: '23:56'
+condition: []
+action:
+  - service: shell_command.grdf_delete_data
+    data: {}
+  - delay: '00:01:00'
+  - service: homeassistant.update_entity
+    target:
+      entity_id:
+        - sensor.grdf_consommation_gaz
+mode: single
 
-- Déclencheur: type *Heure*, à: 23:56
 
-- Actions:
-  
-  - type *Appeler un service*, *shell_command.grdf_delete_data*
-  
-  - type: Délai, valeur: 00:01:00
-  
-  - type *Appeler un service*, service: *homeassistant.update_entity:* *sensor.grdf_consommation_gaz*.
+```
 
 ### Le graphique
 

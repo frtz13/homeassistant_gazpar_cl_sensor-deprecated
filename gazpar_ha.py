@@ -28,7 +28,7 @@ import base64
 import json
 import gazpar
 
-PROG_VERSION = "2021.11.28"
+PROG_VERSION = "2021.12.05"
 
 BASEDIR = os.environ['BASE_DIR']
 
@@ -48,6 +48,7 @@ KEY_DATE = "date"
 KEY_CONSO_kWh = "conso_kWh"
 KEY_CONSO_m3 = "conso_m3"
 KEY_NEWDATA = "new_data"
+JG_initial = "1970-01-01"
 
 # Export the JSON file for daily consumption
 def export_daily_values(res):
@@ -100,7 +101,7 @@ def fetch_data():
 # get saved consumption result and date, so we know when we will get new values
     daily_values = read_releve_from_file()
     if daily_values is None:
-        old_date = "1970-01-01"
+        old_date = JG_initial
         old_index_kWh = 0
     else:
         old_date = daily_values[KEY_DATE]
@@ -116,18 +117,37 @@ def fetch_data():
         logging.error(strErrMsg)
         print("Error occurred: " + strErrMsg)
         return False
+    except ConnectionError as exc:
+        strErrMsg = "[Error] Cannot connect"
+        logging.error(strErrMsg)
+        print(strErrMsg)
     except Exception as exc:
         strErrMsg = "[Error] " + str(exc)
         logging.error(strErrMsg)
         print(strErrMsg)
         return False
         
+    JG = "journeeGaziere"
+    new_index_kWh = old_index_kWh
     try:
+        # parcours des relevés, au cas où un relevé aurait été manqué depuis la lecture précédente
+        jrs = 0
+        for r in reversed(result_json["releves"]):
+            if r[JG] is None:
+                continue
+            if r[JG] <= old_date:
+                break
+            new_index_kWh += r["energieConsomme"]
+            jrs += 1
+            # au commencement, nous ne prenons que le dernier relevé
+            if old_date == JG_initial:
+                break
+
         dictLatest = result_json["releves"][-1]
-        daily_values = {KEY_DATE: dictLatest["journeeGaziere"],
+        daily_values = {KEY_DATE: dictLatest[JG],
                         KEY_CONSO_kWh: dictLatest["energieConsomme"],
-                        KEY_CONSO_m3: dictLatest["indexFin"] - dictLatest["indexDebut"],
-                        KEY_INDEX_kWh: old_index_kWh + dictLatest["energieConsomme"],
+                        KEY_CONSO_m3: dictLatest["volumeBrutConsomme"],
+                        KEY_INDEX_kWh: new_index_kWh,
                         KEY_INDEX_M3: dictLatest["indexFin"],
                         KEY_NEWDATA: True,
                         }
@@ -141,7 +161,7 @@ def fetch_data():
         if (daily_values[KEY_DATE] is None) or (daily_values[KEY_DATE] == old_date):
             logging.info("No new data")
         else:
-            logging.info("Received data")
+            logging.info("Received data" + (f" ({jrs} j)" if jrs > 1 else ""))
             export_daily_values(daily_values)
         print("done.")
         return True
@@ -189,7 +209,7 @@ def delete_json():
     ok = True
     daily_values = read_releve_from_file()
     if daily_values is None:
-        daily_values = {KEY_DATE: "1970-1-1",
+        daily_values = {KEY_DATE: JG_initial,
                         KEY_CONSO_kWh: -1,
                         KEY_CONSO_m3: -1,
                         KEY_INDEX_kWh: 0,

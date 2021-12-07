@@ -42,7 +42,9 @@ class Gazpar:
 
         # check login success
         login_result = json.loads(login_response.text)
-        if login_result["state"] != "SUCCESS":
+        if ("status" in login_result) and ("error" in login_result) and (login_result["status"] >= 400):
+            raise GazparLoginException(f"{login_result['error']} ({login_result['status']})")
+        if ("state" in login_result) and (login_result["state"] != "SUCCESS"):
             raise GazparLoginException(login_result["error"])
 
         # First request never returns data
@@ -59,6 +61,10 @@ class Gazpar:
         # now get data
         response = session.get(url)
         try:
-            return response.json()[self.pce]
+            resp_json = response.json()
+            if self.pce in resp_json:
+                return response.json()[self.pce]
+            else:
+                raise Exception("No Relevé in response")
         except Exception as exc:
             raise Exception("Invalid data received")

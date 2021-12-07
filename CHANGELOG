@@ -1,3 +1,9 @@
+v2021.12.05 - frtz13
+	Change: utiliser volumeBrutConsomme dans relevé pour conso_m3
+	Change: cumuler dans index_kWh toutes les consommations depuis la "journeeGaziere" précédente mémorisée.
+	    Utile pour des moments de "rattrapage", quand plusieurs relevés par jour sont publiées.
+	Quelques améliorations dans le diagnostique d'erreurs.
+
 v2021.11.28 - frtz13
     New: Sensor index_kWh qui cumule des valeurs "energieConsomme"
 

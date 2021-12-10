@@ -93,7 +93,7 @@ sensor:
       - index_m3
       - date
       - log
-    value_template: '{{ value_json.conso }}'
+    value_template: '{{ value_json.conso_kWh }}'
 
 # un de ces Sensors permettra d'ajouter la consommation au Tableau de bord Energie 
 template:
@@ -225,8 +225,6 @@ action:
       entity_id:
         - sensor.grdf_consommation_gaz
 mode: single
-
-
 ```
 
 ### Le graphique
@@ -270,10 +268,12 @@ series:
 
 ### Encore quelques remarques "en vrac":
 
-Par rapport aux versions précédentes de ce command_line_sensor, la nature des données récupérées a changé avec la modification de l'espace client GRDF fin novembre 2021. Les consommations mensuelles ont disparu, et la valeur que nous pouvons intégrer dans le tableau de bord Energie est l'index du compteur (en m<sup>3</sup>), ou un compteur correspondant aux cumul de l'énergie consommée (en kWh) indiqué par GRDF dans les relevés journalières.
+Par rapport aux versions d'avant novembre 2021de ce command_line_sensor, la nature des données récupérées a changé. Les consommations mensuelles ont disparu, et la valeur que nous pouvons intégrer dans le tableau de bord Energie est l'index du compteur (en m<sup>3</sup>), ou l'*index_kWh* correspondant au cumul de l'énergie consommée indiqué par GRDF dans les relevés journaliers.
+
+Quand il y a plusieurs relevés publiés depuis la dernière lecture des données de consommation chez GRDF, l'index_kWh cumule l'énergie consommée de plusieurs relevés (tous ceux après la date mémorisée dans le fichier *releve_du_jour.json*). Dans ce cas, "(n j)" apparait après *Received data* dans le fichier *activity.log*, ou dans l'attribut *log* du Sensor (n étant le nombre de jours). Les consommations journalières correspondent toujours au dernier relevé publié.
 
 Dans le tableau de bord Energie de Home Assistant, la consommation de gaz au jour le jour aura un décalage d'un jour (contrairement au graphique apexcharts-card auquel nous avons pu imposer un décalage d'un jour afin de le caler correctement). Encore, ce décalage est devenu plus grand depuis la mise à jour de l'espace client GRDF.
 
 --
 
-Un grand merci à [Emmanuel](https://github.com/empierre), [Fabien](https://github.com/beufanet) et [Cyprien](https://github.com/cyprieng) pour l'élaboration du script d'accès à l'espace client GRDF.
+Un grand merci à [Emmanuel](https://github.com/empierre), [Fabien](https://github.com/beufanet), [Cyprien](https://github.com/cyprieng) et [Yukulehe](https://github.com/yukulehe) pour l'élaboration du script d'accès à l'espace client GRDF.

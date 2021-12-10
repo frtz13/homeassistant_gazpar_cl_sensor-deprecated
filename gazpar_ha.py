@@ -28,7 +28,7 @@ import base64
 import json
 import gazpar
 
-PROG_VERSION = "2021.12.05"
+PROG_VERSION = "2021.12.09"
 
 BASEDIR = os.environ['BASE_DIR']
 
@@ -128,11 +128,18 @@ def fetch_data():
         return False
         
     JG = "journeeGaziere"
+    RELEVES = "releves"
     new_index_kWh = old_index_kWh
     try:
+        if len(result_json[RELEVES]) == 0:
+            strErrMsg = "Aucun relevé reçu"
+            logging.error(strErrMsg)
+            print(str(strErrMsg))
+            return False
+
         # parcours des relevés, au cas où un relevé aurait été manqué depuis la lecture précédente
         jrs = 0
-        for r in reversed(result_json["releves"]):
+        for r in reversed(result_json[RELEVES]):
             if r[JG] is None:
                 continue
             if r[JG] <= old_date:
@@ -143,7 +150,7 @@ def fetch_data():
             if old_date == JG_initial:
                 break
 
-        dictLatest = result_json["releves"][-1]
+        dictLatest = result_json[RELEVES][-1]
         daily_values = {KEY_DATE: dictLatest[JG],
                         KEY_CONSO_kWh: dictLatest["energieConsomme"],
                         KEY_CONSO_m3: dictLatest["volumeBrutConsomme"],
@@ -240,7 +247,7 @@ def delete_json():
         ok = False
 
     add_daily_log()
-    logging.info(f"Script version {PROG_VERSION}")
+    logging.info(f"Script version {PROG_VERSION} / {gazpar.VERSION}")
     logging.info("reset daily conso")
     print("done.")
     return ok

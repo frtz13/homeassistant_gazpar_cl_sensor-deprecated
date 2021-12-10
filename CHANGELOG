@@ -1,3 +1,8 @@
+v2021.12.09 - frtz13
+	Correction dans documentation: value_template du Sensor.
+	Quelques améliorations dans le diagnostique d'erreurs.
+	récup "nonce" propre à chaque connexion
+
 v2021.12.05 - frtz13
 	Change: utiliser volumeBrutConsomme dans relevé pour conso_m3
 	Change: cumuler dans index_kWh toutes les consommations depuis la "journeeGaziere" précédente mémorisée.

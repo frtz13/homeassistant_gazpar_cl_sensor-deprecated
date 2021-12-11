@@ -91,6 +91,7 @@ sensor:
       - conso_m3
       - index_kWh
       - index_m3
+      - coeffConversion
       - date
       - log
     value_template: '{{ value_json.conso_kWh }}'
@@ -139,7 +140,9 @@ Vous trouverez le PCE de votre installation dans votre facture de gaz, ou dans v
 
 Ensuite, menu Configuration / Contrôle du serveur:  vérifier la configuration (très important de le faire chaque fois!), et si tout est ok, redémarrer Home Assistant. Veuillez noter qu'il va falloir faire ceci aussi pour qu'une modification des infos dans *secrets.yaml* soit prise en compte.
 
-Vous pouvez ajouter le sensor *Gas consumption index (m<sup>3</sup>)* ou *Gas consumption index (kWh)* au Tableau de bord Energie de Home Assistant. 
+Vous pouvez ajouter le sensor *Gas consumption index (m<sup>3</sup>)* ou *Gas consumption index (kWh)* au Tableau de bord Energie de Home Assistant.
+
+Le coefficient de conversion est celui fourni par GRDF dans les relevés.
 
 ### Essais
 

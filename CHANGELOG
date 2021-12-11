@@ -1,3 +1,6 @@
+v2021.12.11 - frtz13
+	New: ajout du coefficent de conversion kWh/m3 dans les attributs du sensor
+
 v2021.12.09 - frtz13
 	Correction dans documentation: value_template du Sensor.
 	Quelques améliorations dans le diagnostique d'erreurs.

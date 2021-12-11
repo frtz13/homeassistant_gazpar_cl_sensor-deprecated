@@ -28,7 +28,7 @@ import base64
 import json
 import gazpar
 
-PROG_VERSION = "2021.12.09"
+PROG_VERSION = "2021.12.11"
 
 BASEDIR = os.environ['BASE_DIR']
 
@@ -47,6 +47,7 @@ KEY_INDEX_kWh = "index_kWh"
 KEY_DATE = "date"
 KEY_CONSO_kWh = "conso_kWh"
 KEY_CONSO_m3 = "conso_m3"
+KEY_coeffConversion = "coeffConversion"
 KEY_NEWDATA = "new_data"
 JG_initial = "1970-01-01"
 
@@ -100,15 +101,21 @@ def fetch_data():
 
 # get saved consumption result and date, so we know when we will get new values
     daily_values = read_releve_from_file()
+    COEFF_initial = 10.99
     if daily_values is None:
         old_date = JG_initial
         old_index_kWh = 0
+        old_coeff = COEFF_initial
     else:
         old_date = daily_values[KEY_DATE]
         if KEY_INDEX_kWh in daily_values:
             old_index_kWh = daily_values[KEY_INDEX_kWh]
         else:
             old_index_kWh = 0
+        if KEY_coeffConversion in daily_values:
+            old_coeff = daily_values[KEY_coeffConversion]
+        else:
+            old_coeff = COEFF_initial
     try:
         grdf_client = gazpar.Gazpar(USERNAME, PASSWORD, PCE)
         result_json = grdf_client.get_consumption()
@@ -151,11 +158,20 @@ def fetch_data():
                 break
 
         dictLatest = result_json[RELEVES][-1]
+
+        try:
+            coeff = dictLatest["coeffConversion"]
+            if coeff is None:
+                coeff = old_coeff
+        except Exception:
+            coeff = old_coeff
+
         daily_values = {KEY_DATE: dictLatest[JG],
                         KEY_CONSO_kWh: dictLatest["energieConsomme"],
                         KEY_CONSO_m3: dictLatest["volumeBrutConsomme"],
                         KEY_INDEX_kWh: new_index_kWh,
                         KEY_INDEX_M3: dictLatest["indexFin"],
+                        KEY_coeffConversion: coeff,
                         KEY_NEWDATA: True,
                         }
     except Exception as exc:

@@ -98,26 +98,26 @@ sensor:
 
 # un de ces Sensors permettra d'ajouter la consommation au Tableau de bord Energie 
 template:
-- sensor:
-    name: "Gas consumption index (m³)"
-    unit_of_measurement: "m³"
-    device_class: "gas"
-    state_class: "total_increasing"
-    state: "{{ state_attr('sensor.grdf_consommation_gaz', 'index_m3') }}"
+  - sensor:
+      name: "Gas consumption index (m³)"
+      unit_of_measurement: "m³"
+      device_class: "gas"
+      state_class: "total_increasing"
+      state: "{{ state_attr('sensor.grdf_consommation_gaz', 'index_m3') }}"
 
-- sensor:
-    name: "Gas consumption index (kWh)"
-    unit_of_measurement: "kWh"
-    device_class: "energy"
-    state_class: "total_increasing"
-    state: "{{ state_attr('sensor.grdf_consommation_gaz', 'index_kWh') }}"
+  - sensor:
+      name: "Gas consumption index (kWh)"
+      unit_of_measurement: "kWh"
+      device_class: "energy"
+      state_class: "total_increasing"
+      state: "{{ state_attr('sensor.grdf_consommation_gaz', 'index_kWh') }}"
 
 # ce Sensor est optionnel
   - sensor:
-    name: "GRDF consommation gaz (m³)"
-    unit_of_measurement: "m³"
-    device_class: "gas"
-    state: "{{ state_attr('sensor.grdf_consommation_gaz', 'conso_m3') }}"
+      name: "GRDF consommation gaz (m³)"
+      unit_of_measurement: "m³"
+      device_class: "gas"
+      state: "{{ state_attr('sensor.grdf_consommation_gaz', 'conso_m3') }}"
 
 shell_command:
     grdf_get_data: '/config/gazpar/gazpar_ha.sh fetch  {{ states("input_text.grdf_user") | base64_encode }} {{ states("input_text.grdf_pwd") | base64_encode }}  {{ states("input_text.grdf_pce") }}'

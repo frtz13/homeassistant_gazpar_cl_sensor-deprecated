@@ -1,5 +1,7 @@
 ﻿# homeassistant_gazpar_cl_sensor
 
+A python script that gets gaz consumption data from GRDF, the French natural gaz distribution company. As this is mainly intended for French people, the rest of this file will be in French.
+
 ## Objectif
 
 L'objectif est de récupérer la consommation journalière de gaz (en kWh et en m<sup>3</sup>) et de la représenter sous forme d'un diagramme à barres dans Home Assistant, chaque barre correspondant à la consommation de la veille. La consommation peut également être intégrée dans le Tableau de bord Energie de Home Assistant.
@@ -271,11 +273,55 @@ series:
 
 ### Encore quelques remarques "en vrac":
 
-Par rapport aux versions d'avant novembre 2021de ce command_line_sensor, la nature des données récupérées a changé. Les consommations mensuelles ont disparu, et la valeur que nous pouvons intégrer dans le tableau de bord Energie est l'index du compteur (en m<sup>3</sup>), ou l'*index_kWh* correspondant au cumul de l'énergie consommée indiqué par GRDF dans les relevés journaliers.
+La valeur que nous pouvons intégrer dans le tableau de bord Energie est l'index du compteur (en m<sup>3</sup>), ou l'*index_kWh* correspondant au cumul de l'énergie consommée indiqué par GRDF dans les relevés journaliers.
 
 Quand il y a plusieurs relevés publiés depuis la dernière lecture des données de consommation chez GRDF, l'index_kWh cumule l'énergie consommée de plusieurs relevés (tous ceux après la date mémorisée dans le fichier *releve_du_jour.json*). Dans ce cas, "(n j)" apparait après *Received data* dans le fichier *activity.log*, ou dans l'attribut *log* du Sensor (n étant le nombre de jours). Les consommations journalières correspondent toujours au dernier relevé publié.
 
-Dans le tableau de bord Energie de Home Assistant, la consommation de gaz au jour le jour aura un décalage d'un jour (contrairement au graphique apexcharts-card auquel nous avons pu imposer un décalage d'un jour afin de le caler correctement). Encore, ce décalage est devenu plus grand depuis la mise à jour de l'espace client GRDF.
+Dans le tableau de bord Energie de Home Assistant, la consommation de gaz au jour le jour aura un décalage d'un jour (ou plus), contrairement au graphique apexcharts-card, auquel nous avons pu imposer un décalage d'un jour - ou plus - afin de le caler correctement.
+
+#### Suivre l'exécution du script
+
+Vous pouvez suivre le résultat du fonctionnement du script en définissant deux *Sensors* supplémentaires: un pour la "journée gazière" du dernier relevé reçu, et un autre avec le résultat de la dernière exécution du script.
+
+```
+homeassistant:
+# autoriser l'utilisation d'un File sensor dans ce dossier
+  allowlist_external_dirs:
+    - "/config/gazpar/"
+
+sensor:
+  - platform: file
+    name: "GRDF Log"
+    file_path: ./gazpar/activity.log
+    # enlever la date en début de ligne
+    value_template: "{{ value[10:] }}"
+
+templates:
+  - sensor:
+      name: "GRDF journée gazière"
+      device_class: "timestamp"
+      # compléter la date avec heure et fuseau horaire
+      # prendre 18h pour un affichage plus fidèle du temps écoulé en fin de journéee
+      state: "{{ state_attr('sensor.grdf_consommation_gaz', 'date') + 'T18:00:00+01:00' }}"
+
+```
+
+#### Une autre façon d'enregistrer les paramètres de connexion à l'espace client GRDF
+
+Si le fait de retrouver ces paramètres dans les *input__text* ne vous plait pas, vous pouvez procéder de la façon suivante (proposée par olivier6931): dans secrets.yaml, remplacez les trois lignes concernant les paramètres de connexion par celle-ci :
+
+```
+grdf_get_data: '/config/gazpar/gazpar_ha.sh fetch {{ "votre@adresse.email" | base64_encode }} {{ "password" | base64_encode }} votre_pce'
+```
+
+Puis, dans configuration.yaml faites référence à cette ligne :
+
+```
+shell_command:
+    grdf_get_data: !secret grdf_get_data
+```
+
+Vous pouvez supprimer les trois *input_text* dans configuration.yaml.
 
 --
 

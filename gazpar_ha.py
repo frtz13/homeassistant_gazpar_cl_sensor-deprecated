@@ -28,7 +28,7 @@ import base64
 import json
 import gazpar
 
-PROG_VERSION = "2021.12.11"
+PROG_VERSION = "2022.01.22"
 
 BASEDIR = os.environ['BASE_DIR']
 
@@ -104,10 +104,15 @@ def fetch_data():
     COEFF_initial = 10.99
     if daily_values is None:
         old_date = JG_initial
+        old_index_m3 = 0
         old_index_kWh = 0
         old_coeff = COEFF_initial
     else:
         old_date = daily_values[KEY_DATE]
+        if KEY_INDEX_M3 in daily_values:
+            old_index_m3 = daily_values[KEY_INDEX_M3]
+        else:
+            old_index_m3 = 0
         if KEY_INDEX_kWh in daily_values:
             old_index_kWh = daily_values[KEY_INDEX_kWh]
         else:
@@ -145,13 +150,17 @@ def fetch_data():
             return False
 
         # parcours des relevés, au cas où un relevé aurait été manqué depuis la lecture précédente
+        absDonn = False
         jrs = 0
         for r in reversed(result_json[RELEVES]):
             if r[JG] is None:
                 continue
             if r[JG] <= old_date:
                 break
-            new_index_kWh += r["energieConsomme"]
+            if r["energieConsomme"] is None:
+                absDonn = True
+            else:
+              new_index_kWh += r["energieConsomme"]
             jrs += 1
             # au commencement, nous ne prenons que le dernier relevé
             if old_date == JG_initial:
@@ -159,12 +168,25 @@ def fetch_data():
 
         dictLatest = result_json[RELEVES][-1]
 
+        # si la journée gazière la plus récente est une sans relevé,
+        # nous attendons une avec relevé
+        if dictLatest["indexFin"] is None:
+            strErrMsg = "Absence de données"
+            logging.error(strErrMsg)
+            print(str(strErrMsg))
+            return False
+
         try:
             coeff = dictLatest["coeffConversion"]
             if coeff is None:
                 coeff = old_coeff
         except Exception:
             coeff = old_coeff
+
+        # avec une journée gazière sans relevé,
+        # nous calculons l'évolution de l'index_kWh à partir de l'évolution de l'index_m3
+        if absDonn:
+            new_index_kWh = old_index_kWh + round((dictLatest["indexFin"] - old_index_m3) * coeff)
 
         daily_values = {KEY_DATE: dictLatest[JG],
                         KEY_CONSO_kWh: dictLatest["energieConsomme"],

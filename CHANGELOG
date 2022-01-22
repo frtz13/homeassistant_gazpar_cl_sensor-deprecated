@@ -1,3 +1,6 @@
+v2022.01.22 - frtz13
+    New: support de "journée gazière" avec "absence de données"
+
 v2021.12.11 - frtz13
 	New: ajout du coefficent de conversion kWh/m3 dans les attributs du sensor
 

@@ -141,6 +141,10 @@ def fetch_data():
         
     JG = "journeeGaziere"
     RELEVES = "releves"
+    EN_CONSO = "energieConsomme"
+    INDEX_FIN = "indexFin"
+    QUAL_RELEVE = "qualificationReleve"
+
     new_index_kWh = old_index_kWh
     try:
         if len(result_json[RELEVES]) == 0:
@@ -157,10 +161,10 @@ def fetch_data():
                 continue
             if r[JG] <= old_date:
                 break
-            if r["energieConsomme"] is None:
+            if r[EN_CONSO] is None:
                 absDonn = True
             else:
-              new_index_kWh += r["energieConsomme"]
+              new_index_kWh += r[EN_CONSO]
             jrs += 1
             # au commencement, nous ne prenons que le dernier relevé
             if old_date == JG_initial:
@@ -170,8 +174,11 @@ def fetch_data():
 
         # si la journée gazière la plus récente est une sans relevé,
         # nous attendons une avec relevé
-        if dictLatest["indexFin"] is None:
-            strErrMsg = "Absence de données"
+        if dictLatest[INDEX_FIN] is None:
+            if dictLatest[QUAL_RELEVE] is None:
+                strErrMsg = "Absence de données"
+            else:
+                strErrMsg = dictLatest[QUAL_RELEVE]
             logging.error(strErrMsg)
             print(str(strErrMsg))
             return False
@@ -185,8 +192,10 @@ def fetch_data():
 
         # avec une journée gazière sans relevé,
         # nous calculons l'évolution de l'index_kWh à partir de l'évolution de l'index_m3
+        absDonnMsg = ""
         if absDonn:
-            new_index_kWh = old_index_kWh + round((dictLatest["indexFin"] - old_index_m3) * coeff)
+            new_index_kWh = old_index_kWh + round((dictLatest[INDEX_FIN] - old_index_m3) * coeff)
+            absDonnMsg = ", absDonn"
 
         daily_values = {KEY_DATE: dictLatest[JG],
                         KEY_CONSO_kWh: dictLatest["energieConsomme"],
@@ -206,7 +215,7 @@ def fetch_data():
         if (daily_values[KEY_DATE] is None) or (daily_values[KEY_DATE] == old_date):
             logging.info("No new data")
         else:
-            logging.info("Received data" + (f" ({jrs} j)" if jrs > 1 else ""))
+            logging.info("Received data" + (f" ({jrs} j{absDonnMsg})" if jrs > 1 else ""))
             export_daily_values(daily_values)
         print("done.")
         return True

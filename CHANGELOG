@@ -1,5 +1,5 @@
 v2022.01.22 - frtz13
-    New: support de "journée gazière" avec "absence de données"
+    New: support de relevés de type "absence de données" (erreur: unsupported operand type(s) for +=...)
 
 v2021.12.11 - frtz13
 	New: ajout du coefficent de conversion kWh/m3 dans les attributs du sensor

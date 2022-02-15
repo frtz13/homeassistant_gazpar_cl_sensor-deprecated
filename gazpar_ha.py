@@ -28,7 +28,7 @@ import base64
 import json
 import gazpar
 
-PROG_VERSION = "2022.01.22"
+PROG_VERSION = "2022.01.30"
 
 BASEDIR = os.environ['BASE_DIR']
 
@@ -155,19 +155,22 @@ def fetch_data():
 
         # parcours des relevés, au cas où un relevé aurait été manqué depuis la lecture précédente
         absDonn = False
+        missing = True # détecter manque de récupération de relevés depuis plus de 7 jrs
         jrs = 0
         for r in reversed(result_json[RELEVES]):
             if r[JG] is None:
                 continue
             if r[JG] <= old_date:
+                missing = False
                 break
             if r[EN_CONSO] is None:
                 absDonn = True
             else:
-              new_index_kWh += r[EN_CONSO]
+                new_index_kWh += r[EN_CONSO]
             jrs += 1
             # au commencement, nous ne prenons que le dernier relevé
             if old_date == JG_initial:
+                missing = False
                 break
 
         dictLatest = result_json[RELEVES][-1]
@@ -192,10 +195,15 @@ def fetch_data():
 
         # avec une journée gazière sans relevé,
         # nous calculons l'évolution de l'index_kWh à partir de l'évolution de l'index_m3
+        # idem si la récup de relevés précédente remonte à plus de 7 jrs
         absDonnMsg = ""
-        if absDonn:
+        missingMsg = ""
+        if absDonn or missing:
             new_index_kWh = old_index_kWh + round((dictLatest[INDEX_FIN] - old_index_m3) * coeff)
-            absDonnMsg = ", absDonn"
+            if absDonn: 
+                absDonnMsg = ", absDonn"
+            if missing:
+                missingMsg = ", miss"
 
         daily_values = {KEY_DATE: dictLatest[JG],
                         KEY_CONSO_kWh: dictLatest["energieConsomme"],
@@ -215,7 +223,7 @@ def fetch_data():
         if (daily_values[KEY_DATE] is None) or (daily_values[KEY_DATE] == old_date):
             logging.info("No new data")
         else:
-            logging.info("Received data" + (f" ({jrs} j{absDonnMsg})" if jrs > 1 else ""))
+            logging.info("Received data" + (f" ({jrs} j{absDonnMsg}{missingMsg})" if jrs > 1 else ""))
             export_daily_values(daily_values)
         print("done.")
         return True

@@ -1,5 +1,12 @@
+v2022.01.30 - frtz13
+    New: détection de l'interruption de récupération de relevés depuis plus de 7 jours.
+		Dans ce cas, l'évolution de l'index_kWh est calculé en fonction de l'évolution de l'index_m3.
+		Le mot "miss" est ajouté dans activity.log.
+	New: explications à propos des messages dans activity.log dans Readme.md.
+
 v2022.01.22 - frtz13
     New: support de relevés de type "absence de données" (erreur: unsupported operand type(s) for +=...)
+	    Le mot "absDonn" est ajouté dans activity.log.
 
 v2021.12.11 - frtz13
 	New: ajout du coefficent de conversion kWh/m3 dans les attributs du sensor

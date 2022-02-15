@@ -303,8 +303,26 @@ templates:
       # compléter la date avec heure et fuseau horaire
       # prendre 18h pour un affichage plus fidèle du temps écoulé en fin de journéee
       state: "{{ state_attr('sensor.grdf_consommation_gaz', 'date') + 'T18:00:00+01:00' }}"
-
 ```
+
+#### Messages dans *activity.log*
+
+Voici un aperçu des messages que vous risquez de rencontrer.
+
+- `**Received data**`: au moins un nouveau relevé a été reçu. Comme information supplémentaire, on peut trouver:
+  `(n j.)`: plusieurs relevés ont été publiées depuis la dernière lecture (n indique leur nombre), dont le script a extrait l'evolution de *index_m3* et *index_kWh*. Les valeurs de consommation correspondent à la consommation du relevé le plus récent.
+  `(absDonn)`: parmi les relevés reçus, au moins un portait la notion "Absence de données", et ne comportait aucune information de consommation. Dans ce cas, l'*index_kWh* ne peut pas être calculé comme d'habitude (cumul des valeurs de *EnergieCosomme*). Il est alors calculé en fonction de l'évolution de l'*index_m3* et du coefficient de conversion.
+  `(miss)`: le script détecte qu'il ne s'est pas connecté à l'espace client GRDF depuis au moins sept jours. dans ce cas, il se comporte comme dans le cas précédent (*absDonn*).
+
+- `**Absence de données**`: Le dernier des relevés reçus ne contient aucune donnée de consommation. Dans ce cas, le script attend des temps meilleurs, notamment un relevé contenant des données de consommation.
+
+- `**No new data**`: La connexion à l'espace client s'est déroulé correctement, mais... rien de nouveau.
+
+- `**Aucun relevé reçu**`: La connexion à l'espace client a été possible, mais la liste des relevé était vide.
+
+- `**[No data received], [Error] Invalid data received**`: Le script n'a pas pu interpréter la réponse reçu pendant la connexion. Il ne s'aggissait probablement pas d'une liste de relevés. D'autres erreurs qui surviennent lors d'une tentative de connexion sont également signalées de cette manière.
+
+- `**Script version..., Reset daily conso**`: messages écrites par l'Automation *GRDF Reset*.
 
 #### Une autre façon d'enregistrer les paramètres de connexion à l'espace client GRDF
 

@@ -1,10 +1,10 @@
 ﻿# homeassistant_gazpar_cl_sensor
 
-A python script that gets gaz consumption data from GRDF, the French natural gaz distribution company. As this is mainly intended for French people, the rest of this file will be in French.
+A python script that gets gaz consumption data from GRDF, the French natural gaz distribution company. As this is interesting only for people living in France, this description is written in French.
 
 ## Objectif
 
-L'objectif est de récupérer la consommation journalière de gaz (en kWh et en m<sup>3</sup>) et de la représenter sous forme d'un diagramme à barres dans Home Assistant, chaque barre correspondant à la consommation de la veille. La consommation peut également être intégrée dans le Tableau de bord Energie de Home Assistant.
+L'objectif est de récupérer la consommation journalière de gaz (en kWh et en m<sup>3</sup>) et de la représenter sous forme d'un diagramme à barres dans Home Assistant, chaque barre correspondant à la consommation de l'avant-veille. La consommation peut également être intégrée dans le Tableau de bord Energie de Home Assistant.
 
 <img title="" src="./img/ha_energy_gas.png" alt="Graphique de consommation de gaz dans le Tableau de bord Energy de Home Assistant" data-align="center">
 
@@ -12,25 +12,19 @@ L'objectif est de récupérer la consommation journalière de gaz (en kWh et en 
 
 ## Principe de fonctionnement
 
-L'intégration dans Home Assistant nécessitera un peu de patience et nous fera visiter quelques aspects de ce système.
-
-La consommation est représentée sous forme d'un *Command line sensor* dont la mise à jour est provoquée par une *Automatisation*. Ainsi nous maîtrisons le moment et la fréquence de connexion à l'espace client GRDF, et nous évitons de l'interroger inutilement à propos de la consommation, sachant qu'elle n'est disponible qu'à partir de l'après-midi, ou même encore plus tard. En tout cas, il en est ainsi pour la mienne.
+La consommation est représentée sous forme d'un *Command line sensor* dont la mise à jour est provoquée par une *Automatisation*. Ainsi nous maîtrisons le moment et la fréquence de connexion à l'espace client GRDF, et nous évitons de l'interroger inutilement à propos de la consommation, sachant qu'elle n'est disponible que dans la soirée. En tout cas, il en est ainsi pour la mienne. Notons qu'actuellement les relevés de consommation sont publiées avec deux jours de retard, et qu'il s'agit en conséquence chaque fois de la consommation de l'avant-veille.
 
 La récupération de la consommation se déroule de la manière suivante:
 
-- Dans l'après-midi, la commande *gazpar_ha.sh fetch* effectuera une connexion à l'espace client GRDF et enregistre la consommation dans le fichier *releve_du_jour.json*.
+- Dans la soirée, la commande *gazpar_ha.sh fetch* effectue une connexion à l'espace client GRDF, récupère les dernièrs relevés publiés, extrait la consommation du relevé de l'avant-veille (s'il est disponible), et enregistre la consommation et les valeurs des indices kWh et m<sup>3</sup> dans le fichier *releve_du_jour.json*.
 
-- Ensuite, la commande *gazpar_ha.sh sensor* va extraire les détails de la consommation de ce fichier. C'est cette commande qui alimente le *Command line sensor* et qui lui fournit la consommation journalière et l'index du compteur.
+- Ensuite, un un *Command line sensor* mis en oeuvre par la commande *gazpar_ha.sh sensor* rend ces informations accessibles à Home Assistant.
 
-- Un peu avant minuit, nous effaçons les consommations journalières de ce fichier, et remettons les *Sensors* de la consommation journalière à la valeur "inconnu" (-1).
-
-Ainsi, chaque jour, nos *Sensors* de la consommation journalière aura cette valeur jusqu'à la récupération du nouveau relevé, qu'il conservera jusqu'à peu avant minuit.
+- Un peu avant minuit, la commande *gazpar_ha.sh delete* effacera les consommations journalières de ce fichier, et un autre appel *gazpar_ha.sh sensor* remet les *Sensors* de la consommation journalière à la valeur "inconnu" (-1).
 
 ## Installation
 
 Créer un dossier *gazpar* dans le dossier *config* de Home Assistant (là, où se trouve le fichier *configuration.yaml*).
-
-NB: ce dossier est à la fois accessible de l'intérieur du conteneur Home Assistant, et depuis la machine hôte. Il est ainsi possible d'y accéder par *scp* ou par *Samba* pour y copier des fichiers. 
 
 Placez-vous dans ce dossier, et commencez à télécharger le premier fichier:
 
@@ -46,6 +40,8 @@ Faites de même avec:
 
 - requirements.txt
 
+Vous pouvez utiliser d'autres méthodes pour effectuer cette opération, par ex.: télécharger le contenu du Repository sous forme d'un fichier .zip, extraire les fichiers désignés, et les transférer dans ce dossier avec la commande Upload de File Editor. Ou encore y accéder par un partage Samba.
+
 Rendez gazpar_ha.sh exécutable:
 
 ```
@@ -53,6 +49,8 @@ chmod +x gazpar_ha.sh
 ```
 
 NB: selon votre contexte de travail, il est possible qu'il soit nécessaire de faire précéder certaines commandes par "sudo".
+
+Cette opération peut également être effectuée avec cette commande Execute Shell Command de File Editor: `chmod +x ./gazpar/gazpar_ha.sh`
 
 ## Mise à jour
 
@@ -68,7 +66,7 @@ Si vous utilisez déjà une version précédente du gazpar_cl_sensor:
 
 Tout d'abord, il faudra créer un espace client chez GRDF, si cela n'est pas déjà fait, et s'y rendre, afin d'accepter les CGV.
 
-Si vous n'avez pas encore installé un éditeur pour modifier des fichiers de configuration de Home Asssitant, c'est le moment. A partir du Add-on Store du Superviseur de Home Assistant, installez "File editor" ou "Visual Studio Code".
+Si vous n'avez pas encore installé un éditeur de texte pour modifier des fichiers de configuration de Home Asssitant, c'est le moment. A partir du Add-on Store du Superviseur de Home Assistant, installez "File editor" ou "Visual Studio Code".
 
 Inscrivez votre nom utilisateur, mot de passe et votre PCE (vous le trouvez par ex. dans votre facture de gaz) dans secrets.yaml:
 
@@ -136,13 +134,11 @@ input_text:
 
 NB: si *configuration.yaml* contient déjà une rubrique "sensor:", ne créez pas une nouvelle rubrique de ce nom, mais ajoutez les définitions "sensor" à la rubrique existante. Idem pour les rubriques *template*, *shell_command* ou *input_text*.
 
-L'attribut *date* du *Sensor GRDF consommation gaz* correspond à la *Journée gazière*  du relevé. Cette date correspond à la veille du relevé du compteur, qui est effectuée tôt le matin. Au moment où j'écris ces lignes, je récupère les relevés avec deux jours de retard.
+L'attribut *date* du *Sensor GRDF consommation gaz* correspond à la *Journée gazière*  du relevé. Cette date correspond à la veille du relevé du compteur, qui est effectuée tôt le matin. Au moment où j'écris ces lignes, on récupère les relevés avec deux jours de retard.
 
-Vous trouverez le PCE de votre installation dans votre facture de gaz, ou dans votre espace client GRDF.
+Ensuite, menu Configuration / Contrôle du serveur:  vérifier la configuration (très important de le faire chaque fois!), et si tout est ok, redémarrer Home Assistant. Un tel redémarrage est également nécessaire pour une prise en compte de modifications des infos dans *secrets.yaml*.
 
-Ensuite, menu Configuration / Contrôle du serveur:  vérifier la configuration (très important de le faire chaque fois!), et si tout est ok, redémarrer Home Assistant. Veuillez noter qu'il va falloir faire ceci aussi pour qu'une modification des infos dans *secrets.yaml* soit prise en compte.
-
-Vous pouvez ajouter le sensor *Gas consumption index (m<sup>3</sup>)* ou *Gas consumption index (kWh)* au Tableau de bord Energie de Home Assistant.
+A l'aide du sensor *Gas consumption index (kWh)* ou *Gas consumption index (m<sup>3</sup>)*, vous pouvez ajouter votre consommation de gaz au Tableau de bord Energie de Home Assistant.
 
 Le coefficient de conversion est celui fourni par GRDF dans les relevés.
 
@@ -150,21 +146,21 @@ Le coefficient de conversion est celui fourni par GRDF dans les relevés.
 
 Dans Home Assistant, rendez-vous dans Outils de développement / SERVICES, sélectionner le service *shell_command.grdf_delete_data* puis appuyez sur "Call SERVICE". Cela installera d'éventuelles bibliothèques PYTHON manquantes, et devrait créer les fichiers *releve_du_jour.json*, *activity.log*, *pip.log* et *piperror.log* dans le dossier *gazpar*.
 
-Si aucun nouveau fichier n'est présent: vérifiez qu'il n'y a pas d'erreur au niveau du nom du dossier (écriture en majuscules/minuscules compte!), et consultez le log de Home Assistant.
+Si aucun nouveau fichier n'est présent: vérifiez qu'il n'y a pas d'erreur au niveau du nom du dossier (écriture en majuscules/minuscules compte!), que vous avez bien suivi toutes les étapes de l'installation, et consultez le log de Home Assistant.
 
-Ensuite, faites de même avec le service *shell_command.grdf_get_data*. Examinez à nouveau le contenu de votre dossier *gazpar*.
+Ensuite, appelez le service *shell_command.grdf_get_data*. Examinez à nouveau le contenu de votre dossier *gazpar*.
 
 Si tout va bien, les fichiers *releve_du_jour.json* et *activity.log* ont évolués. Je vous invite de consulter le contenu de ces fichiers.
 
-Si vous avez obtenu le fichier *activity.log* mais pas de fichier *json*: consultez-le; il y a peut-être un problème avec les identifiants pour accéder à l'espace client GRDF, ou que l'accès à l'espace n'a pas permis de récupérer des données de consommation (dans ce cas, on trouve la mention "No data received" dans le log). Dans ce cas, exécutez le service une nouvelle fois dans Home Assistant.
+Si vous avez obtenu le fichier *activity.log* mais pas de fichier *json*: consultez-le; il y a peut-être un problème avec les identifiants pour accéder à l'espace client GRDF, ou que l'accès à l'espace n'a pas permis de récupérer des données de consommation (dans ce cas, on trouve la mention "No data received" dans le log). Exécutez le service une nouvelle fois dans Home Assistant.
 
-Lançons maintenant la mise à jour de notre *sensor*: rendez-vous dans Outils de développement / SERVICES, sélectionnez le service *homeassistant.update_entity* puis l'Entité *sensor.grdf_consommation_gaz*, puis appuyez sur "Call SERVICE". Puis regardez dans Outils de développement / ETATS, si votre Entité *sensor.grdf_consommation_gaz* a bien été mise à jour avec la consommation de la veille. Si elle porte la valeur -1, cela signifie que la consommation de la veille n'est pas encore disponible (vérifiez!).
+Lançons maintenant la mise à jour de notre *sensor*: rendez-vous dans Outils de développement / SERVICES, sélectionnez le service *homeassistant.update_entity*, puis l'Entité *sensor.grdf_consommation_gaz*, et ensuite appuyez sur "Call SERVICE". Puis regardez dans Outils de développement / ETATS, si votre Entité *sensor.grdf_consommation_gaz* a bien été mise à jour avec la consommation du relevé le plus récent disponible.
 
 ### Automatisation de la lecture de la consommation de la veille
 
 Pour rendre la connexion à l'espace client automatique, nous ajoutons une *Automatisation* dans Home Assistant (Configuration / Automatisations).
 
-Commencer par une Automatisation vide, passez en mode YAML, et collez la définition suivante:
+Commencez par une Automatisation vide, passez en mode YAML, et collez la définition suivante:
 
 ```
 alias: GRDF get data
@@ -206,9 +202,7 @@ mode: single
 
 Quelques remarques:
 
-- Vous pouvez par la suite ajouter à cette Automation d'autres Déclencheurs de type *Time* ou *Time Pattern*.
-
-- Grâce à la "condition", cette Automation ne se déclenchera plus dès que nous aurons obtenu la consommation de la veille.
+- Grâce à la "condition", cette Automation ne se déclenchera plus, dès que nous aurons obtenu des données de consommation.
 
 - Le délai dans les Actions laissera un peu de temps à l'Action précédente de se terminer, même si Home Assistant perd la patience au bout d'une minute.
 
@@ -262,7 +256,7 @@ yaxis:
 series:
   - entity: sensor.grdf_consommation_gaz
     type: column
-    offset: +1day
+    offset: +2day
     float_precision: 0
     show:
       name_in_header: false
@@ -273,15 +267,15 @@ series:
 
 ### Encore quelques remarques "en vrac":
 
-La valeur que nous pouvons intégrer dans le tableau de bord Energie est l'index du compteur (en m<sup>3</sup>), ou l'*index_kWh* correspondant au cumul de l'énergie consommée indiqué par GRDF dans les relevés journaliers.
+A propos de l'index_kWh: dans ses relevés, GRDF publie un index_m3, mais pas un index_kWh. Pour fabriquer celui-ci, le script cumule les valeurs de l'énergie consommée journalière (celle-ci est publiée dans les relevés) au fur et à mesure.
 
-Quand il y a plusieurs relevés publiés depuis la dernière lecture des données de consommation chez GRDF, l'index_kWh cumule l'énergie consommée de plusieurs relevés (tous ceux après la date mémorisée dans le fichier *releve_du_jour.json*). Dans ce cas, "(n j)" apparait après *Received data* dans le fichier *activity.log*, ou dans l'attribut *log* du Sensor (n étant le nombre de jours). Les consommations journalières correspondent toujours au dernier relevé publié.
+Quand plusieurs relevés ont été publiés depuis la dernière lecture des données de consommation chez GRDF (soit parce que le script n'a pas été lancé, ou parce que plusieurs relevés ont été publiés dans une même journée), l'index_kWh cumulera l'énergie consommée de plusieurs relevés (tous ceux après la date mémorisée dans le fichier *releve_du_jour.json*). Dans ce cas, "(n j)" apparait après *Received data* dans le log  (n étant le nombre de jours). La consommation journalière correspondent toujours au dernier relevé publié.
 
-Dans le tableau de bord Energie de Home Assistant, la consommation de gaz au jour le jour aura un décalage d'un jour (ou plus), contrairement au graphique apexcharts-card, auquel nous avons pu imposer un décalage d'un jour - ou plus - afin de le caler correctement.
+Dans le tableau de bord Energie de Home Assistant, la consommation de gaz au jour le jour aura un décalage de deux jours (actuellement), contrairement au graphique apexcharts-card, auquel nous avons pu imposer un décalage de deux jours, afin de le caler correctement.
 
 #### Suivre l'exécution du script
 
-Vous pouvez suivre le résultat du fonctionnement du script en définissant deux *Sensors* supplémentaires: un pour la "journée gazière" du dernier relevé reçu, et un autre avec le résultat de la dernière exécution du script.
+Vous pouvez suivre le résultat du fonctionnement du script en définissant deux *Sensors* supplémentaires: pour la "journée gazière" du dernier relevé reçu, et un autre avec le résultat de la dernière exécution du script.
 
 ```
 homeassistant:
@@ -307,22 +301,22 @@ templates:
 
 #### Messages dans *activity.log*
 
-Voici un aperçu des messages que vous risquez de rencontrer.
+Voici un aperçu des messages que vous risquez de rencontrer dans le log.
 
-- `**Received data**`: au moins un nouveau relevé a été reçu. Comme information supplémentaire, on peut trouver:
-  `(n j.)`: plusieurs relevés ont été publiées depuis la dernière lecture (n indique leur nombre), dont le script a extrait l'evolution de *index_m3* et *index_kWh*. Les valeurs de consommation correspondent à la consommation du relevé le plus récent.
+- `Received data`: au moins un nouveau relevé a été reçu. Comme information supplémentaire, on peut y trouver:
+  `(n j.)`: plusieurs relevés ont été publiées depuis la dernière lecture (n indique leur nombre), dont le script a extrait l'evolution de *index_m3* et *index_kWh*. La consommation correspond à la consommation publiée dans le relevé le plus récent.
   `(absDonn)`: parmi les relevés reçus, au moins un portait la notion "Absence de données", et ne comportait aucune information de consommation. Dans ce cas, l'*index_kWh* ne peut pas être calculé comme d'habitude (cumul des valeurs de *EnergieCosomme*). Il est alors calculé en fonction de l'évolution de l'*index_m3* et du coefficient de conversion.
-  `(miss)`: le script détecte qu'il ne s'est pas connecté à l'espace client GRDF depuis au moins sept jours. dans ce cas, il se comporte comme dans le cas précédent (*absDonn*).
+  `(miss)`: le script détecte une longue période d'inactivité (plus que sept jours). Dans ce cas, il se comporte comme dans le cas précédent (*absDonn*).
 
-- `**Absence de données**`: Le dernier des relevés reçus ne contient aucune donnée de consommation. Dans ce cas, le script attend des temps meilleurs, notamment un relevé contenant des données de consommation.
+- `Absence de données`: Le dernier des relevés reçus ne contient aucune donnée de consommation. Dans ce cas, le script attend des temps meilleurs, notamment un relevé contenant des données de consommation.
 
-- `**No new data**`: La connexion à l'espace client s'est déroulé correctement, mais... rien de nouveau.
+- `No new data`: La connexion à l'espace client s'est déroulé correctement, mais... rien de nouveau.
 
-- `**Aucun relevé reçu**`: La connexion à l'espace client a été possible, mais la liste des relevé était vide.
+- `Aucun relevé reçu`: La connexion à l'espace client a été possible, mais la liste des relevé était vide.
 
-- `**[No data received], [Error] Invalid data received**`: Le script n'a pas pu interpréter la réponse reçu pendant la connexion. Il ne s'aggissait probablement pas d'une liste de relevés. D'autres erreurs qui surviennent lors d'une tentative de connexion sont également signalées de cette manière.
+- `[No data received], [Error] Invalid data received`: Le script n'a pas pu interpréter la réponse reçue pendant la connexion. Il ne s'agissait probablement pas d'une liste de relevés. D'autres erreurs qui surviennent lors d'une tentative de connexion sont également signalées de cette manière.
 
-- `**Script version..., Reset daily conso**`: messages écrites par l'Automation *GRDF Reset*.
+- `Script version..., Reset daily conso`: messages écrites par l'Automation *GRDF Reset*.
 
 #### Une autre façon d'enregistrer les paramètres de connexion à l'espace client GRDF
 

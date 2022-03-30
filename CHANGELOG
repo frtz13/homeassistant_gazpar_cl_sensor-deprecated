@@ -1,6 +1,7 @@
 v2022.03.30 - frtz13
 	New: lorsque l'erreur "Invalid data" survient, le contenu de la réponse de l'espace client GRDF
 		est écrit dans le fichier "invalid_data.txt".
+	gazpar.py (2022.03.31) ajout status_code dans invalid_data.txt
 
 v2022.01.30 - frtz13
     New: détection de l'interruption de récupération de relevés depuis plus de 7 jours.

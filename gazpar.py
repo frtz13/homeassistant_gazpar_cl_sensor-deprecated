@@ -11,7 +11,7 @@ import requests
 import time
 import json
 
-VERSION = "2022.03.30"
+VERSION = "2022.03.31"
 
 class GazparLoginException(Exception):
     """Thrown if a login error was encountered"""
@@ -82,4 +82,4 @@ class Gazpar:
             if reponse is None:
                 raise GazparInvalidDataException("")
             else:
-                raise GazparInvalidDataException(reponse.text)
+                raise GazparInvalidDataException("[{0}]\n{1}".format(reponse.status_code, reponse.text))

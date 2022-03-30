@@ -28,7 +28,7 @@ import base64
 import json
 import gazpar
 
-PROG_VERSION = "2022.01.30"
+PROG_VERSION = "2022.03.30"
 
 BASEDIR = os.environ['BASE_DIR']
 
@@ -133,6 +133,22 @@ def fetch_data():
         strErrMsg = "[Error] Cannot connect"
         logging.error(strErrMsg)
         print(strErrMsg)
+        return False
+    except gazpar.GazparInvalidDataException as exc:
+        strErrMsg = "[Error: Invalid data] "
+        if len(str(exc)) == 0:
+            strErrMsg += "Empty response"
+        else:
+            try:
+                INV_DATA = "invalid_data.txt"
+                with open(os.path.join(BASEDIR, INV_DATA), 'w') as f:
+                    f.write(str(exc))
+                strErrMsg += "Written to " + INV_DATA
+            except Exception as exc2:
+                strErrMsg += "Failed to write invalid data to file"
+        logging.error(strErrMsg)
+        print(strErrMsg)
+        return False
     except Exception as exc:
         strErrMsg = "[Error] " + str(exc)
         logging.error(strErrMsg)

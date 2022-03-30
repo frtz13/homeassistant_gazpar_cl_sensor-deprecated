@@ -314,7 +314,7 @@ Voici un aperçu des messages que vous risquez de rencontrer dans le log.
 
 - `Aucun relevé reçu`: La connexion à l'espace client a été possible, mais la liste des relevé était vide.
 
-- `[No data received], [Error] Invalid data received`: Le script n'a pas pu interpréter la réponse reçue pendant la connexion. Il ne s'agissait probablement pas d'une liste de relevés. D'autres erreurs qui surviennent lors d'une tentative de connexion sont également signalées de cette manière.
+- `[No data received], [Error Invalid data]`: Le script n'a pas pu interpréter la réponse reçue pendant la connexion. Il ne s'agissait probablement pas d'une liste de relevés. Dans ce cas, il tente d'enresitrer la réponse en question dans le fichier invalid_data.txt. D'autres erreurs qui surviennent lors d'une tentative de connexion sont également signalées de cette manière.
 
 - `Script version..., Reset daily conso`: messages écrites par l'Automation *GRDF Reset*.
 

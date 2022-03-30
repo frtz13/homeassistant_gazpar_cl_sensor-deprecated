@@ -151,3 +151,4 @@ cython_debug/
 /export*.*
 /conso*.*
 /releve*.*
+/invalid*.*

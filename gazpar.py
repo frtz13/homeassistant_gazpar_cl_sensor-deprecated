@@ -11,12 +11,15 @@ import requests
 import time
 import json
 
-VERSION = "2021.12.09"
+VERSION = "2022.03.30"
 
 class GazparLoginException(Exception):
     """Thrown if a login error was encountered"""
     pass
 
+class GazparInvalidDataException(Exception):
+    """Thrown if a login error was encountered"""
+    pass
 
 class Gazpar:
     def __init__(self, username, password, pce):
@@ -62,19 +65,21 @@ class Gazpar:
         if ("state" in login_result) and (login_result["state"] != "SUCCESS"):
             raise GazparLoginException(login_result["error"])
 
-        # First request never returns data
         url = 'https://monespace.grdf.fr/api/e-conso/pce/consommation/informatives?dateDebut={0}&dateFin={1}&pceList%5B%5D={2}'.format(
             (datetime.datetime.now() - datetime.timedelta(days=7)).strftime('%Y-%m-%d'),
             datetime.datetime.now().strftime('%Y-%m-%d'),
             self.pce)
         session.get(url) # first try, does not return data
         # now get data
-        response = session.get(url)
+        reponse = session.get(url)
         try:
-            resp_json = response.json()
+            resp_json = reponse.json()
             if self.pce in resp_json:
-                return response.json()[self.pce]
+                return reponse.json()[self.pce]
             else:
                 raise Exception("No Relevé in response")
         except Exception as exc:
-            raise Exception("Invalid data received")
+            if reponse is None:
+                raise GazparInvalidDataException("")
+            else:
+                raise GazparInvalidDataException(reponse.text)

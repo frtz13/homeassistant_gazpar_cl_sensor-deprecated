@@ -49,12 +49,12 @@ chaque fois de la consommation de l'avant-veille.
 La récupération de la consommation se déroule de la manière suivante:
 
 - Dans la soirée, la commande *gazpar_ha.sh fetch* effectue une connexion à
-  l'espace client GRDF, récupère les dernièrs relevés publiés, extrait la
+  l'espace client GRDF, récupère les derniers relevés publiés, extrait la
   consommation du relevé de l'avant-veille (s'il est disponible), et
   enregistre la consommation et les valeurs des indices kWh et
   m<sup>3</sup> dans le fichier *releve_du_jour.json*.
 
-- Ensuite, un un *Command line sensor* mis en oeuvre par la commande
+- Ensuite, un *Command line sensor* mis en oeuvre par la commande
   *gazpar_ha.sh sensor* rend ces informations accessibles à Home Assistant.
 
 - Un peu avant minuit, la commande *gazpar_ha.sh delete* effacera les
@@ -104,7 +104,7 @@ Si vous utilisez déjà une version précédente du gazpar_cl_sensor:
 
 - Remplacez les fichiers qui ont été modifiés.
 
-- Passez le reste de cet article en revue et complétez et modiez les
+- Passez le reste de cet article en revue et complétez et modifiez les
   définitions des Sensors etc. dans Home Assistant.
 
 - Vous pouvez supprimer les fichiers devenus inutiles: gazpar_ha.cfg,
@@ -116,12 +116,12 @@ Tout d'abord, il faudra créer un espace client chez GRDF, si cela n'est pas
 déjà fait, et s'y rendre, afin d'accepter les CGV.
 
 Si vous n'avez pas encore installé un éditeur de texte pour modifier des
-fichiers de configuration de Home Asssitant, c'est le moment. A partir du
+fichiers de configuration de Home Assistant, c'est le moment. A partir du
 Add-on Store du Superviseur de Home Assistant, installez "File editor" ou
 "Visual Studio Code".
 
 Inscrivez votre nom utilisateur, mot de passe et votre PCE (vous le trouvez
-par ex. dans votre facture de gaz) dans secrets.yaml:
+par ex. dans votre facture de gaz) dans `secrets.yaml`:
 
 ```yaml
 grdf_user: "votre@adresse.email"
@@ -151,7 +151,7 @@ sensor:
       - log
     value_template: '{{ value_json.conso_kWh }}'
 
-# un de ces Sensors permettra d'ajouter la consommation au Tableau de bord Energie
+# Un de ces Sensors permettra d'ajouter la consommation au Tableau de bord Energie
 template:
   - sensor:
       name: "Gas consumption index (m³)"
@@ -167,7 +167,7 @@ template:
       state_class: "total_increasing"
       state: "{{ state_attr('sensor.grdf_consommation_gaz', 'index_kWh') }}"
 
-# ce Sensor est optionnel
+  # Ce Sensor est optionnel
   - sensor:
       name: "GRDF consommation gaz (m³)"
       unit_of_measurement: "m³"
@@ -325,7 +325,8 @@ Pour la présentation, nous utiliserons la "ApexCharts Card"
 
 Son installation se résume grosso-modo à:
 
-- télécharger *apexcharts-card.js* et le placer dans le dossier /config/www
+- télécharger *apexcharts-card.js* et le placer dans le dossier
+  `/config/www`
 
 - dans Home Assistant, se rendre dans Configuration / Tableaux de bord
   Lovelace, onglet Ressources. Click sur "+" puis saisir la URL
@@ -375,7 +376,7 @@ lancé, ou parce que plusieurs relevés ont été publiés dans une même
 journée), l'index_kWh cumulera l'énergie consommée de plusieurs relevés
 (tous ceux après la date mémorisée dans le fichier *releve_du_jour.json*).
 Dans ce cas, "(n j)" apparait après *Received data* dans le log (n étant le
-nombre de jours). La consommation journalière correspondent toujours au
+nombre de jours). La consommation journalière correspond toujours au
 dernier relevé publié.
 
 Dans le tableau de bord Energie de Home Assistant, la consommation de gaz
@@ -416,18 +417,21 @@ templates:
 Voici un aperçu des messages que vous risquez de rencontrer dans le log.
 
 - `Received data`: au moins un nouveau relevé a été reçu. Comme information
-  supplémentaire, on peut y trouver: `(n j.)`: plusieurs relevés ont été
-  publiées depuis la dernière lecture (n indique leur nombre), dont le
-  script a extrait l'evolution de *index_m3* et *index_kWh*. La
-  consommation correspond à la consommation publiée dans le relevé le plus
-  récent. `(absDonn)`: parmi les relevés reçus, au moins un portait la
-  notion "Absence de données", et ne comportait aucune information de
-  consommation. Dans ce cas, l'*index_kWh* ne peut pas être calculé comme
-  d'habitude (cumul des valeurs de *EnergieCosomme*). Il est alors calculé
-  en fonction de l'évolution de l'*index_m3* et du coefficient de
-  conversion. `(miss)`: le script détecte une longue période d'inactivité
-  (plus que sept jours). Dans ce cas, il se comporte comme dans le cas
-  précédent (*absDonn*).
+  supplémentaire, on peut y trouver:
+
+  - `(n j.)`: plusieurs relevés ont été publiées depuis la dernière lecture
+    (n indique leur nombre), dont le script a extrait l'évolution de
+    *index_m3* et *index_kWh*. La consommation correspond à la consommation
+    publiée dans le relevé le plus récent.
+  - `(absDonn)`: parmi les relevés reçus, au moins un portait la notion
+    "Absence de données", et ne comportait aucune information de
+    consommation. Dans ce cas, l'*index_kWh* ne peut pas être calculé comme
+    d'habitude (cumul des valeurs de *energieConsomme*). Il est alors
+    calculé en fonction de l'évolution de l'*index_m3* et du coefficient de
+    conversion.
+  - `(miss)`: le script détecte une longue période d'inactivité (plus que
+    sept jours). Dans ce cas, il se comporte comme dans le cas précédent
+    (*absDonn*).
 
 - `Absence de données`: Le dernier des relevés reçus ne contient aucune
   donnée de consommation. Dans ce cas, le script attend des temps
@@ -442,7 +446,7 @@ Voici un aperçu des messages que vous risquez de rencontrer dans le log.
 - `[No data received], [Error Invalid data]`: Le script n'a pas pu
   interpréter la réponse reçue pendant la connexion. Il ne s'agissait
   probablement pas d'une liste de relevés. Dans ce cas, il tente
-  d'enresitrer la réponse en question dans le fichier invalid_data.txt.
+  d'enregistrer la réponse en question dans le fichier `invalid_data.txt`.
   D'autres erreurs qui surviennent lors d'une tentative de connexion sont
   également signalées de cette manière.
 
@@ -460,14 +464,14 @@ paramètres de connexion par celle-ci :
 grdf_get_data: '/config/gazpar/gazpar_ha.sh fetch {{ "votre@adresse.email" | base64_encode }} {{ "password" | base64_encode }} votre_pce'
 ```
 
-Puis, dans configuration.yaml faites référence à cette ligne :
+Puis, dans `configuration.yaml` faites référence à cette ligne :
 
 ```yaml
 shell_command:
     grdf_get_data: !secret grdf_get_data
 ```
 
-Vous pouvez supprimer les trois *input_text* dans configuration.yaml.
+Vous pouvez supprimer les trois *input_text* dans `configuration.yaml`.
 
 \--
 

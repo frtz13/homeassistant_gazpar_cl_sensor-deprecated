@@ -37,12 +37,12 @@ class Gazpar:
     def get_consumption(self):
         session = requests.Session()
 
-        session.headers = {
+        session.headers.update({
             'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Mobile Safari/537.36',
             'Accept-Encoding':'gzip, deflate, br',
             'Accept':'application/json, */*',
             'Connection': 'keep-alive'
-            }
+            })
         
         # get nonce
         req = session.get('https://monespace.grdf.fr/client/particulier/accueil')

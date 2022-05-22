@@ -266,11 +266,11 @@ def sensor():
         try:
             if os.path.exists(DAILY_json_log):
                 with open(DAILY_json_log,"r") as logfile:
-                    dailylog = logfile.read().splitlines()
+                    dailylog = "\r\n".join(logfile.read().splitlines())
         except:
             pass
 
-        daily_values["log"] = "\r\n".join(dailylog)
+        daily_values["log"] = dailylog
         print(json.dumps(daily_values))
         return True
     except Exception as e:

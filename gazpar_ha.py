@@ -1,10 +1,11 @@
-#!/usr/bin/python3
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python3
 # Adapted to gaspar (C) 2018 epierre
 # Adapted to Home Assistant by frtz13
 # homeassistant_gazpar_cl_sensor
 
-"""Returns energy consumption data from GRDF consumption data collected via their website (API).
+"""
+Returns energy consumption data from GRDF consumption data
+collected via their website (API).
 """
 
 # This program is free software: you can redistribute it and/or modify
@@ -20,17 +21,17 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import os
-import datetime
-import logging
-import sys
 import base64
 import json
+import logging
+import os
+import sys
+
 import gazpar
 
 PROG_VERSION = "2022.03.30"
 
-BASEDIR = os.environ['BASE_DIR']
+BASEDIR = os.environ["BASE_DIR"]
 
 DAILY = "releve_du_jour"
 DAILY_json = os.path.join(BASEDIR, DAILY + ".json")
@@ -51,29 +52,39 @@ KEY_coeffConversion = "coeffConversion"
 KEY_NEWDATA = "new_data"
 JG_initial = "1970-01-01"
 
-# Export the JSON file for daily consumption
+
 def export_daily_values(res):
-    with open(DAILY_json, 'w') as outfile:
+    """Export the JSON file for daily consumption"""
+    with open(DAILY_json, "w") as outfile:
         json.dump(res, outfile)
 
+
 def add_daily_log():
-    logging.basicConfig(filename=DAILY_json_log, format='%(asctime)s %(message)s', datefmt='%d/%m/%Y %H:%M:%S', level=logging.INFO)
+    logging.basicConfig(
+        filename=DAILY_json_log,
+        format="%(asctime)s %(message)s",
+        datefmt="%d/%m/%Y %H:%M:%S",
+        level=logging.INFO,
+    )
+
+
 #   set up logging to extra file
-    #logToFile = logging.FileHandler(DAILY_json_log)
-    #logToFile.level = logging.INFO
-    #formatter = logging.Formatter('%(asctime)s %(message)s',"%Y-%m-%d %H:%M:%S")
-    #logToFile.setFormatter(formatter)
-    #logging.getLogger('').addHandler(logToFile)
+# logToFile = logging.FileHandler(DAILY_json_log)
+# logToFile.level = logging.INFO
+# formatter = logging.Formatter('%(asctime)s %(message)s',"%Y-%m-%d %H:%M:%S")
+# logToFile.setFormatter(formatter)
+# logging.getLogger('').addHandler(logToFile)
+
 
 def read_releve_from_file():
     try:
         if os.path.exists(DAILY_json):
-            with open(DAILY_json, 'r') as infile:
+            with open(DAILY_json) as infile:
                 return json.load(infile)
         else:
             return None
     except Exception as e:
-        logging.error("Error reading releve json file: " + str(e))
+        logging.error(f"Error reading releve json file: {e}")
         return None
 
 
@@ -85,10 +96,14 @@ def fetch_data():
     add_daily_log()
 
     if len(sys.argv) < 7:
-        logging.error(f"Pas assez de paramètres sur la ligne de commande ({len(sys.argv) - 1} au lieu de 6)")
+        logging.error(
+            f"Pas assez de paramètres sur la ligne de commande"
+            f" ({len(sys.argv) - 1} au lieu de 6)"
+        )
         return False
 
-    # we transfer login info in base64 encoded form to avoid any interpretation of special characters
+    # Use base64 encoded form to transfer log information
+    # to avoid any interpretation of special characters
     try:
         user_bytes = base64.b64decode(sys.argv[2])
         USERNAME = user_bytes.decode("utf-8")
@@ -96,10 +111,14 @@ def fetch_data():
         PASSWORD = pwd_bytes.decode("utf-8")
         PCE = sys.argv[4]
     except Exception as exc:
-        logging.error(f"Cannot b64decode username ({sys.argv[2]}) or password ({sys.argv[3]}): " + str(exc))
+        logging.error(
+            f"Cannot b64decode username ({sys.argv[2]})"
+            f" or password ({sys.argv[3]}): {exc}"
+        )
         return False
 
-# get saved consumption result and date, so we know when we will get new values
+    # Get saved consumption result and date,
+    # so we know when we will get new values
     daily_values = read_releve_from_file()
     COEFF_initial = 10.99
     if daily_values is None:
@@ -129,7 +148,7 @@ def fetch_data():
         logging.error(strErrMsg)
         print("Error occurred: " + strErrMsg)
         return False
-    except ConnectionError as exc:
+    except ConnectionError:
         strErrMsg = "[Error] Cannot connect"
         logging.error(strErrMsg)
         print(strErrMsg)
@@ -141,10 +160,10 @@ def fetch_data():
         else:
             try:
                 INV_DATA = "invalid_data.txt"
-                with open(os.path.join(BASEDIR, INV_DATA), 'w') as f:
+                with open(os.path.join(BASEDIR, INV_DATA), "w") as f:
                     f.write(str(exc))
-                strErrMsg += "Written to " + INV_DATA
-            except Exception as exc2:
+                strErrMsg += f"Written to {INV_DATA}"
+            except Exception:
                 strErrMsg += "Failed to write invalid data to file"
         logging.error(strErrMsg)
         print(strErrMsg)
@@ -154,7 +173,7 @@ def fetch_data():
         logging.error(strErrMsg)
         print(strErrMsg)
         return False
-        
+
     JG = "journeeGaziere"
     RELEVES = "releves"
     EN_CONSO = "energieConsomme"
@@ -169,9 +188,10 @@ def fetch_data():
             print(str(strErrMsg))
             return False
 
-        # parcours des relevés, au cas où un relevé aurait été manqué depuis la lecture précédente
+        # parcourt des relevés, au cas où un relevé
+        # aurait été manqué depuis la lecture précédente
         absDonn = False
-        missing = True # détecter manque de récupération de relevés depuis plus de 7 jrs
+        missing = True  # détecter absence de relevés depuis > 7 jrs
         jrs = 0
         for r in reversed(result_json[RELEVES]):
             if r[JG] is None:
@@ -209,26 +229,29 @@ def fetch_data():
         except Exception:
             coeff = old_coeff
 
-        # avec une journée gazière sans relevé,
-        # nous calculons l'évolution de l'index_kWh à partir de l'évolution de l'index_m3
+        # Pour une journée gazière sans relevé,
+        # calcul de l'évolution de l'index_kWh avec l'évolution de l'index_m3
         # idem si la récup de relevés précédente remonte à plus de 7 jrs
         absDonnMsg = ""
         missingMsg = ""
         if absDonn or missing:
-            new_index_kWh = old_index_kWh + round((dictLatest[INDEX_FIN] - old_index_m3) * coeff)
-            if absDonn: 
+            new_index_kWh = old_index_kWh + round(
+                (dictLatest[INDEX_FIN] - old_index_m3) * coeff
+            )
+            if absDonn:
                 absDonnMsg = ", absDonn"
             if missing:
                 missingMsg = ", miss"
 
-        daily_values = {KEY_DATE: dictLatest[JG],
-                        KEY_CONSO_kWh: dictLatest["energieConsomme"],
-                        KEY_CONSO_m3: dictLatest["volumeBrutConsomme"],
-                        KEY_INDEX_kWh: new_index_kWh,
-                        KEY_INDEX_M3: dictLatest["indexFin"],
-                        KEY_coeffConversion: coeff,
-                        KEY_NEWDATA: True,
-                        }
+        daily_values = {
+            KEY_DATE: dictLatest[JG],
+            KEY_CONSO_kWh: dictLatest["energieConsomme"],
+            KEY_CONSO_m3: dictLatest["volumeBrutConsomme"],
+            KEY_INDEX_kWh: new_index_kWh,
+            KEY_INDEX_M3: dictLatest["indexFin"],
+            KEY_coeffConversion: coeff,
+            KEY_NEWDATA: True,
+        }
     except Exception as exc:
         strErrMsg = "[No data received] " + str(exc)
         logging.error(strErrMsg)
@@ -236,10 +259,15 @@ def fetch_data():
         return False
 
     try:
-        if (daily_values[KEY_DATE] is None) or (daily_values[KEY_DATE] == old_date):
+        if (daily_values[KEY_DATE] is None) or (
+            daily_values[KEY_DATE] == old_date
+        ):
             logging.info("No new data")
         else:
-            logging.info("Received data" + (f" ({jrs} j{absDonnMsg}{missingMsg})" if jrs > 1 else ""))
+            logging.info(
+                "Received data"
+                + (f" ({jrs} j{absDonnMsg}{missingMsg})" if jrs > 1 else "")
+            )
             export_daily_values(daily_values)
         print("done.")
         return True
@@ -248,7 +276,7 @@ def fetch_data():
         logging.error(strErrMsg)
         print(strErrMsg)
         return False
- 
+
 
 def sensor():
     """
@@ -265,12 +293,12 @@ def sensor():
 
         try:
             if os.path.exists(DAILY_json_log):
-                with open(DAILY_json_log,"r") as logfile:
-                    dailylog = logfile.read().splitlines()
-        except:
+                with open(DAILY_json_log) as logfile:
+                    dailylog = "\r\n".join(logfile.read().splitlines())
+        except Exception:  # nosec
             pass
 
-        daily_values["log"] = "\r\n".join(dailylog)
+        daily_values["log"] = dailylog
         print(json.dumps(daily_values))
         return True
     except Exception as e:
@@ -287,12 +315,13 @@ def delete_json():
     ok = True
     daily_values = read_releve_from_file()
     if daily_values is None:
-        daily_values = {KEY_DATE: JG_initial,
-                        KEY_CONSO_kWh: -1,
-                        KEY_CONSO_m3: -1,
-                        KEY_INDEX_kWh: 0,
-                        KEY_NEWDATA: False,
-                        }
+        daily_values = {
+            KEY_DATE: JG_initial,
+            KEY_CONSO_kWh: -1,
+            KEY_CONSO_m3: -1,
+            KEY_INDEX_kWh: 0,
+            KEY_NEWDATA: False,
+        }
     else:
         daily_values[KEY_CONSO_kWh] = -1
         daily_values[KEY_CONSO_m3] = -1
@@ -302,10 +331,10 @@ def delete_json():
     try:
         export_daily_values(daily_values)
     except Exception as e:
-        #logging.ERROR("error when replacing json result file: " + str(e))
+        # logging.ERROR("error when replacing json result file: " + str(e))
         print("error when replacing releve file: " + str(e))
         ok = False
-    
+
     PREVIOUS_LOG = os.path.join(BASEDIR, "previous.log")
     try:
         if os.path.exists(PREVIOUS_LOG):
@@ -313,7 +342,7 @@ def delete_json():
         if os.path.exists(DAILY_json_log):
             os.rename(DAILY_json_log, PREVIOUS_LOG)
     except Exception as e:
-        #logging.ERROR("error when deleting result log file: " + str(e))
+        # logging.ERROR("error when deleting result log file: " + str(e))
         print("error when deleting/renaming log file: " + str(e))
         ok = False
 
@@ -323,12 +352,18 @@ def delete_json():
     print("done.")
     return ok
 
-# Main script 
+
+# Main script
 def main():
     # we log to file and to a string which we include in the json result
-#    logging.basicConfig(filename=BASEDIR + "/" + LOGFILE, format='%(asctime)s %(message)s', level=logging.INFO)
-    
-    arg_errmsg = f"use one of the following command line argugmnts: {CMD_Fetch}, {CMD_Sensor}, {CMD_Sensor_Nolog} or {CMD_Delete}"
+    # logging.basicConfig(filename=BASEDIR + "/" + LOGFILE,
+    #                     format='%(asctime)s %(message)s', level=logging.INFO)
+
+    arg_errmsg = (
+        f"Use one of the following command line arguments:"
+        f" {CMD_Fetch}, {CMD_Sensor}, {CMD_Sensor_Nolog}"
+        f" or {CMD_Delete}"
+    )
     if len(sys.argv) > 3:
         if sys.argv[1] == CMD_Fetch:
             if not fetch_data():
@@ -343,6 +378,7 @@ def main():
             print(arg_errmsg)
     else:
         print(arg_errmsg)
+
 
 if __name__ == "__main__":
     main()

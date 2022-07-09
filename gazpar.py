@@ -12,7 +12,7 @@ import json
 
 import requests
 
-VERSION = "2022.03.31"
+VERSION = "2022.07.09"
 
 
 class GazparLoginException(Exception):

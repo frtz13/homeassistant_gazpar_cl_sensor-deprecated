@@ -48,6 +48,7 @@ class Gazpar:
                 "Accept-Encoding": "gzip, deflate, br",
                 "Accept": "application/json, */*",
                 "Connection": "keep-alive",
+                "domain": "grdf.fr",
             }
         )
 
@@ -79,6 +80,7 @@ class Gazpar:
 
         # check login success
         login_result = json.loads(login_response.text)
+
         if (
             ("status" in login_result)
             and ("error" in login_result)

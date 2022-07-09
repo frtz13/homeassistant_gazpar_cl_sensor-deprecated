@@ -1,64 +1,67 @@
+gazpar.py v. 2022.07.09 - mdw
+	correction: √©viter erreur http 500 dans la phase "login".
+
 v2022.03.30 - frtz13
-	New: lorsque l'erreur "Invalid data" survient, le contenu de la rÈponse de l'espace client GRDF
-		est Ècrit dans le fichier "invalid_data.txt".
+	New: lorsque l'erreur "Invalid data" survient, le contenu de la r√©ponse de l'espace client GRDF
+		est √©crit dans le fichier "invalid_data.txt".
 	gazpar.py (2022.03.31) ajout status_code dans invalid_data.txt
 
 v2022.01.30 - frtz13
-    New: dÈtection de l'interruption de rÈcupÈration de relevÈs depuis plus de 7 jours.
-		Dans ce cas, l'Èvolution de l'index_kWh est calculÈ en fonction de l'Èvolution de l'index_m3.
-		Le mot "miss" est ajoutÈ dans activity.log.
-	New: explications ‡ propos des messages dans activity.log dans README.md.
+    New: d√©tection de l'interruption de r√©cup√©ration de relev√©s depuis plus de 7 jours.
+		Dans ce cas, l'√©volution de l'index_kWh est calcul√© en fonction de l'√©volution de l'index_m3.
+		Le mot "miss" est ajout√© dans activity.log.
+	New: explications √† propos des messages dans activity.log dans README.md.
 
 v2022.01.22 - frtz13
-    New: support de relevÈs de type "absence de donnÈes" (erreur: unsupported operand type(s) for +=...)
-	    Le mot "absDonn" est ajoutÈ dans activity.log.
+    New: support de relev√©s de type "absence de donn√©es" (erreur: unsupported operand type(s) for +=...)
+	    Le mot "absDonn" est ajout√© dans activity.log.
 
 v2021.12.11 - frtz13
 	New: ajout du coefficient de conversion kWh/m3 dans les attributs du sensor
 
 v2021.12.09 - frtz13
 	Correction dans documentation: value_template du Sensor.
-	Quelques amÈliorations dans le diagnostique d'erreurs.
-	rÈcup "nonce" propre ‡ chaque connexion
+	Quelques am√©liorations dans le diagnostique d'erreurs.
+	r√©cup "nonce" propre √† chaque connexion
 
 v2021.12.05 - frtz13
-	Change: utiliser volumeBrutConsomme dans relevÈ pour conso_m3
-	Change: cumuler dans index_kWh toutes les consommations depuis la "journeeGaziere" prÈcÈdente mÈmorisÈe.
-	    Utile pour des moments de "rattrapage", quand plusieurs relevÈs par jour sont publiÈes.
-	Quelques amÈliorations dans le diagnostique d'erreurs.
+	Change: utiliser volumeBrutConsomme dans relev√© pour conso_m3
+	Change: cumuler dans index_kWh toutes les consommations depuis la "journeeGaziere" pr√©c√©dente m√©moris√©e.
+	    Utile pour des moments de "rattrapage", quand plusieurs relev√©s par jour sont publi√©es.
+	Quelques am√©liorations dans le diagnostique d'erreurs.
 
 v2021.11.28 - frtz13
     New: Sensor index_kWh qui cumule des valeurs "energieConsomme"
 
 v2021.11.26 - frtz13
-	Breaking change: suite ‡ la modification de l'espace client GRDF, le donnes de consommation
+	Breaking change: suite √† la modification de l'espace client GRDF, le donnes de consommation
 	  mensuelles ne sont plus disponibles, et les Sensors correspondants n'existent plus.
-	  Le Sensor pouvant alimenter le Tableau de bord Energie est dÈsormais le nouveau Sensor
-	  correspondant ‡ l'index du compteur (en m3).
-	Change: les consommations journaliËres ne correspondent pas forcÈment ‡ la consommation de la veille.
-	  Les Sensors sont alimentÈs lorsque de nouvelles donnÈes sont disponibles.
-	New: ajout du PCE ‡ la configuration.
+	  Le Sensor pouvant alimenter le Tableau de bord Energie est d√©sormais le nouveau Sensor
+	  correspondant √† l'index du compteur (en m3).
+	Change: les consommations journali√®res ne correspondent pas forc√©ment √† la consommation de la veille.
+	  Les Sensors sont aliment√©s lorsque de nouvelles donn√©es sont disponibles.
+	New: ajout du PCE √† la configuration.
 
 v2021.11.02 - frtz13
-	DÈtermination du "mois courant" avec un jour de dÈcalage, pour tenir compte du fait
+	D√©termination du "mois courant" avec un jour de d√©calage, pour tenir compte du fait
 	que les chiffres de consommation arrivent toujours avec un jour de retard.
-	Meilleure protection des donnÈes de consommation mensuelles dÈj‡ enregistrÈs quand
+	Meilleure protection des donn√©es de consommation mensuelles d√©j√† enregistr√©s quand
 	la connexion ne les retourne pas.
-	adaptation du code pour la apex-charts-card ‡ la version 1.10.0 de cette derniËre.
+	adaptation du code pour la apex-charts-card √† la version 1.10.0 de cette derni√®re.
 
 v2021.10.22 - frtz13
     retourner 0 kWh et 0 m3 quand la consommation mensuelle n'est pas connu
-	definition du sensor pour le Tableau de bord Ènergie de Home Assistant
+	definition du sensor pour le Tableau de bord √©nergie de Home Assistant
 	transfert du login/mot de passe de l'espace client GRDF vers secrets.yaml
 
 v2021.10.04 - frtz13
-	nouveau script d'accËs ‡ l'espace client GRDF afin de rÈcupÈrer aussi les donnÈes de consommation en m3.
+	nouveau script d'acc√®s √† l'espace client GRDF afin de r√©cup√©rer aussi les donn√©es de consommation en m3.
 	ajout de nouveaux Sensors dans la configuration de Home Assistant.
-	nouvel argument de ligne de commande pour gazpar_ha.py: sensor_nolog: aucune Ècirture dans le log, tant que tout va bien.
-	changement de nom des fichiers qui enregistrent les donnÈes de consommation, et le log des activitÈs.
+	nouvel argument de ligne de commande pour gazpar_ha.py: sensor_nolog: aucune √©cirture dans le log, tant que tout va bien.
+	changement de nom des fichiers qui enregistrent les donn√©es de consommation, et le log des activit√©s.
 
 30/9/2021 - frtz13
-    README: ajout dÈclarations des Sensors en m3
+    README: ajout d√©clarations des Sensors en m3
 	README: modification de la condition de l'automatisation GRDF Get Data
 
 v20210921 - frtz13
@@ -67,11 +70,11 @@ v20210921 - frtz13
 	dont overwrite monthly values with empty result
 	abandon de gazpar_ha.log
 	un peu de refactoring
-	log de la veille sauvegardÈ dans le fichier previous.log
+	log de la veille sauvegard√© dans le fichier previous.log
 
 v20210409 - frtz13
-    ajout de la consommation du mois en cours et du mois prÈcÈdent dans les attributs du Sensor
-	ajout des Sensors pour la consommation du mois courant et du mois prÈcÈdent
+    ajout de la consommation du mois en cours et du mois pr√©c√©dent dans les attributs du Sensor
+	ajout des Sensors pour la consommation du mois courant et du mois pr√©c√©dent
 	utilisation de la ApexCharts Card
 
 v20210120 - frtz13

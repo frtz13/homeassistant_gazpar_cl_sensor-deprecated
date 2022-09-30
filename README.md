@@ -105,7 +105,7 @@ Si vous utilisez déjà une version précédente du gazpar_cl_sensor:
 - Remplacez les fichiers qui ont été modifiés.
 
 - Passez le reste de cet article en revue et complétez et modifiez les
-  définitions des Sensors etc. dans Home Assistant.
+  définitions des Sensors etc. dans Home Assistant. En particulier, si vous passez d'une version précédente à la version 2022.09.21 de gazpar_ha.py, modifiez l'Automatisation "GRDF get data".
 
 - Vous pouvez supprimer les fichiers devenus inutiles: gazpar_ha.cfg,
   conso_par_jour.json, conso_par_mois.json.
@@ -271,9 +271,9 @@ trigger:
     minutes: /10
     seconds: '00'
 condition:
-  - condition: numeric_state
+  - condition: state
     entity_id: sensor.grdf_consommation_gaz
-    below: '-0.5'
+    state: unavailable
 action:
   - service: shell_command.grdf_get_data
   - delay:
@@ -418,7 +418,7 @@ Voici un aperçu des messages que vous risquez de rencontrer dans le log.
 
 - `Received data`: au moins un nouveau relevé a été reçu. Comme information
   supplémentaire, on peut y trouver:
-
+  
   - `(n j.)`: plusieurs relevés ont été publiées depuis la dernière lecture
     (n indique leur nombre), dont le script a extrait l'évolution de
     *index_m3* et *index_kWh*. La consommation correspond à la consommation

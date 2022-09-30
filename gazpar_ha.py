@@ -29,7 +29,7 @@ import sys
 
 import gazpar
 
-PROG_VERSION = "2022.03.30"
+PROG_VERSION = "2022.09.21"
 
 BASEDIR = os.environ["BASE_DIR"]
 
@@ -312,19 +312,20 @@ def delete_json():
     reset daily conso to 'unknown'
     create index_kWh in json so the Sensor will have a 0 initial value
     """
+    unavailable = "unavailable"
     ok = True
     daily_values = read_releve_from_file()
     if daily_values is None:
         daily_values = {
             KEY_DATE: JG_initial,
-            KEY_CONSO_kWh: -1,
-            KEY_CONSO_m3: -1,
+            KEY_CONSO_kWh: unavailable,
+            KEY_CONSO_m3: unavailable,
             KEY_INDEX_kWh: 0,
             KEY_NEWDATA: False,
         }
     else:
-        daily_values[KEY_CONSO_kWh] = -1
-        daily_values[KEY_CONSO_m3] = -1
+        daily_values[KEY_CONSO_kWh] = unavailable
+        daily_values[KEY_CONSO_m3] = unavailable
         daily_values[KEY_NEWDATA] = False
         if KEY_INDEX_kWh not in daily_values:
             daily_values[KEY_INDEX_kWh] = 0

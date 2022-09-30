@@ -1,3 +1,6 @@
+gazpar_ha.py v. 2022.09.21 - frtz13
+	Change: au lieu d'utiliser la valeur -1 pour une consommation encore inconnue, utiliser le State 'unavailable'.
+
 gazpar.py v. 2022.07.09 - mdw
 	correction: éviter erreur http 500 dans la phase "login".
 

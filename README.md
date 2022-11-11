@@ -204,6 +204,8 @@ A l'aide du sensor *Gas consumption index (kWh)* ou *Gas consumption index
 (m<sup>3</sup>)*, vous pouvez ajouter votre consommation de gaz au Tableau
 de bord Energie de Home Assistant.
 
+NB: actuellement, avec la v. 2022.11.2 de Home Assistant, le sensor "Gas consumption index (kWh)" n'apparait pas dans la liste de sélection des sources de gaz du tableau de bord Energie. Afin qu'il y apparaisse, on peut temporairement modifier sa *device_class* en "gas", puis le sélectionner, au prix d'un message d'erreur signalant une erreur d'unité de mesure. Ensuite, faire repasser sa *device_class* en "energy", ce qui fera disparaître l'erreur, tout en laissant le sensor sélectionné.
+
 Le coefficient de conversion est celui fourni par GRDF dans les relevés.
 
 ### Essais
@@ -296,7 +298,7 @@ Quelques remarques:
   minute.
 
 Une chose est encore à faire: peu avant minuit, la valeur du *sensor* doit
-être remis à l'état *inconnu*. Donc, une autre Automatisation:
+être remis à l'état *unavailable*. Donc, une autre Automatisation:
 
 ```yaml
 alias: GRDF reset
@@ -439,7 +441,7 @@ Voici un aperçu des messages que vous risquez de rencontrer dans le log.
   mais... rien de nouveau.
 
 - `Aucun relevé reçu`: La connexion à l'espace client a été possible, mais
-  la liste des relevé était vide.
+  la liste des relevés était vide.
 
 - `[No data received], [Error Invalid data]`: Le script n'a pas pu
   interpréter la réponse reçue pendant la connexion. Il ne s'agissait

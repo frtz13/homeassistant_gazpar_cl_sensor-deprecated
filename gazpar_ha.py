@@ -379,7 +379,7 @@ def main():
             print(arg_errmsg)
     else:
         print(arg_errmsg)
-
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()

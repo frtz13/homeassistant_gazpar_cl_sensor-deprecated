@@ -4,6 +4,10 @@ A python script that gets gaz consumption data from GRDF, the French
 natural gaz distribution company. As this is interesting only for people
 living in France, this rest of this documentation is written in French.
 
+### 28/11/2022 : Information
+
+Si vous recevez une erreur "Invalid data": retournez sur l'espace client GRDF avec votre navigateur préféré. Il sera peut être nécessaire de modifier votre mot de passe (les règles de complexité ont changé). Une fois le mot de passe changé: quittez l'espace client, reconnectez-vous à nouveau, quittez-le à nouveau. Puis saisissez le nouveau mot de passe dans `secrets.yaml` et redémarrez H.A. 
+
 <!-- mdformat-toc start --slug=github --no-anchors --maxlevel=4 --minlevel=2 -->
 
 - [Objectif](#objectif)

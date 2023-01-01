@@ -115,6 +115,9 @@ Si vous utilisez déjà une version précédente du gazpar_cl_sensor:
 Tout d'abord, il faudra créer un espace client chez GRDF, si cela n'est pas
 déjà fait, et s'y rendre, afin d'accepter les CGV.
 
+Un compte GRDF peut être crée et lié à votre compteur gaz grâce à une facture de votre fournisseur (ex: Engie).
+Sur celle-ci, devrait être indiquée votre "Point de comptage et d'estimation" (PCE) qui permettra à votre compte GRDF d’accéder à votre consommation.
+
 Si vous n'avez pas encore installé un éditeur de texte pour modifier des
 fichiers de configuration de Home Assistant, c'est le moment. A partir du
 Add-on Store du Superviseur de Home Assistant, installez "File editor" ou

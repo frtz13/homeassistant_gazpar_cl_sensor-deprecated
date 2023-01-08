@@ -60,7 +60,7 @@ La récupération de la consommation se déroule de la manière suivante:
 - Un peu avant minuit, la commande *gazpar_ha.sh delete* effacera les
   consommations journalières de ce fichier, et un autre appel *gazpar_ha.sh
   sensor* remet les *Sensors* de la consommation journalière à la valeur
-  "inconnu" (-1).
+  *unavailable*.
 
 ## Installation
 
@@ -113,15 +113,13 @@ Si vous utilisez déjà une version précédente du gazpar_cl_sensor:
 ## Paramétrer l'accès à l'espace client GRDF
 
 Tout d'abord, il faudra créer un espace client chez GRDF, si cela n'est pas
-déjà fait, et s'y rendre, afin d'accepter les CGV.
+déjà fait, et s'y rendre, afin d'accepter les CGV. Pour ce faire, vous avez besoin du PCE de votre raccordement, que vous pouvez trouver dans votre facture de votre fournisseur de gaz, par ex.
 
 Si vous n'avez pas encore installé un éditeur de texte pour modifier des
-fichiers de configuration de Home Assistant, c'est le moment. A partir du
-Add-on Store du Superviseur de Home Assistant, installez "File editor" ou
-"Visual Studio Code".
+fichiers de configuration de Home Assistant, c'est le moment. A partir de la
+*Boutique des Modules complémentaires (Add-ons)* Home Assistant, installez "File editor" ou "Visual Studio Code".
 
-Inscrivez votre nom utilisateur, mot de passe et votre PCE (vous le trouvez
-par ex. dans votre facture de gaz) dans `secrets.yaml`:
+Inscrivez votre nom utilisateur, mot de passe et votre PCE dans `secrets.yaml`:
 
 ```yaml
 grdf_user: "votre@adresse.email"
@@ -185,10 +183,9 @@ input_text:
     initial: !secret grdf_pce
 ```
 
-NB: si *configuration.yaml* contient déjà une rubrique "sensor:", ne créez
-pas une nouvelle rubrique de ce nom, mais ajoutez les définitions "sensor"
-à la rubrique existante. Idem pour les rubriques *template*,
-*shell_command* ou *input_text*.
+NB: si *configuration.yaml* contient déjà de telles rubriques, ne créez
+pas de nouvelles rubriques de ce nom, mais ajoutez les définitions
+à la rubrique existante.
 
 L'attribut *date* du *Sensor GRDF consommation gaz* correspond à la
 *Journée gazière* du relevé. Cette date correspond à la veille du relevé du
@@ -204,7 +201,7 @@ A l'aide du sensor *Gas consumption index (kWh)* ou *Gas consumption index
 (m<sup>3</sup>)*, vous pouvez ajouter votre consommation de gaz au Tableau
 de bord Energie de Home Assistant.
 
-NB: actuellement, avec la v. 2022.11.4 de Home Assistant, le sensor "Gas consumption index (kWh)" n'apparait pas dans la liste de sélection des sources de gaz du tableau de bord Energie. Afin qu'il y apparaisse, on peut temporairement modifier sa *device_class* en "gas", puis le sélectionner, au prix d'un message d'erreur signalant une erreur d'unité de mesure. Ensuite, faire repasser sa *device_class* en "energy", ce qui fera disparaître l'erreur, tout en laissant le sensor sélectionné.
+
 
 Le coefficient de conversion est celui fourni par GRDF dans les relevés.
 

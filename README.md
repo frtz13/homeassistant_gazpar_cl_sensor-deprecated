@@ -23,6 +23,10 @@ living in France, this documentation is written in French.
 
 <!-- mdformat-toc end -->
 
+## Actualité
+
+Depuis le 19/1/2023, l'accès à l'espace client passe systématiquement par une vérification par reCaptcha, ce qui le rend inaccessible à des traitements automatisés comme celui-ci.
+
 ## Objectif
 
 L'objectif est de récupérer la consommation journalière de gaz (en kWh et
@@ -200,8 +204,6 @@ une prise en compte de modifications des infos dans *secrets.yaml*.
 A l'aide du sensor *Gas consumption index (kWh)* ou *Gas consumption index
 (m<sup>3</sup>)*, vous pouvez ajouter votre consommation de gaz au Tableau
 de bord Energie de Home Assistant.
-
-
 
 Le coefficient de conversion est celui fourni par GRDF dans les relevés.
 
